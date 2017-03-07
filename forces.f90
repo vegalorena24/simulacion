@@ -11,12 +11,12 @@
 
 
 subroutine forces(pos,boxlength,accel,rc,epot)
-    real*8, dimension(:,:), intent(in)  :: pos
-    real*8, dimension(:,:), intent(out) :: accel
-    real*8, intent(in)                  :: boxlength, rc
-    real*8, intent(out)                 :: epot
+    real, dimension(:,:), intent(in)  :: pos
+    real, dimension(:,:), intent(out) :: accel
+    real, intent(in)                  :: boxlength, rc
+    real, intent(out)                 :: epot
     integer                             :: is, js, natoms
-    real*8                              :: pot
+    real                             :: pot
 
     natoms = size(pos,1)
 
@@ -36,13 +36,13 @@ subroutine forces(pos,boxlength,accel,rc,epot)
 end subroutine
 
 subroutine lj(is,js,pos,boxlength,accel,rc,pot)
-real*8, dimension(:,:), intent(in)      :: pos
-real*8, dimension(:,:), intent(inout)   :: accel
-real*8, intent(in)                      :: boxlength, rc
+real, dimension(:,:), intent(in)      :: pos
+real, dimension(:,:), intent(inout)   :: accel
+real, intent(in)                      :: boxlength, rc
 integer, intent(in)                     :: is, js
-real*8, intent(out)                     :: pot
-real*8, dimension(size(pos,2))          :: rij
-real*8                                  :: rr2, rijl, rr, forcedist
+real, intent(out)                     :: pot
+real, dimension(size(pos,2))          :: rij
+real                                  :: rr2, rijl, rr, forcedist
 integer                                 :: l, dim
 
 dim = size(pos,2)
