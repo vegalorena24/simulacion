@@ -1,40 +1,17 @@
 !********************************************************************************
-!************************ENVIRONMENT FOR SUBROUTINE PBC**************************
+!********************************** SUBROUTINE PBC ******************************
 !********************************************************************************
 !
 !                                                          Lorena Vega Domínguez
 !********************************************************************************
-!program pbc
-!implicit none
-!integer::t,i,j,N,DIM
-!real:: BoxSize
-!real,dimension(:,:),allocatable:: x
-!real,dimension(:), allocatable:: distancia
 
-!BoxSize=2.0
-!DIM=3                      !dimension
-!N=4                        !number of part.
-!allocate(x(DIM,N))
-!allocate(distancia(DIM))
-! x=reshape((/(t,t=1,12)/),(/3,4/))
 
-!do i=1,N-1                                 !loop over all pairs
- !do j=i+1,N
- !print*, x(:,i), "y" ,x(:,j)
- !call Refold_Positions(x(:,i),x(:,j),BoxSize,DIM,distancia)
- !end do
-!end do 
-
-!end program
-
-subroutine Refold_Positions(posi,posj,BoxSize,DIM,distancia)
+subroutine Refold_Positions(pos,N,dimnsion,BoxSize)
 implicit none
-integer::DIM
+integer::dimnsion,N,i !N=Number of part. 
 real:: BoxSize
-real,dimension(DIM):: posi, posj,distancia
-
-distancia=posi-posj !distance vector between i and j
-
-distancia=distancia-BoxSize*nint(distancia/BoxSize) !periodic conditions
-
+real,dimension(N,dimnsion):: pos !positions
+do i=N
+ pos(i,:)=pos(i,:)-BoxSize*nint(pos(i,:)/BoxSize) !periodic conditions
+end do
 end subroutine Refold_Positions
