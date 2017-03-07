@@ -19,9 +19,7 @@ allocate (velocities(N,dimnsion))
 open (unit=10, File='coordenadas.dat')
 
 do i=1,N
- do j=1,dimnsion
- read(10,*) positions(i,j)
- end do
+ read(10,*) positions(i,:)
 end do
 close (10) 
 
