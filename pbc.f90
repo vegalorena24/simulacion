@@ -1,12 +1,16 @@
 !********************************************************************************
 !************************ENVIRONMENT FOR SUBROUTINE PBC**************************
 !********************************************************************************
+!
+!                                                          Lorena Vega Domínguez
+!********************************************************************************
 !program pbc
 !implicit none
 !integer::t,i,j,N,DIM
 !real:: BoxSize
 !real,dimension(:,:),allocatable:: x
 !real,dimension(:), allocatable:: distancia
+
 !BoxSize=2.0
 !DIM=3                      !dimension
 !N=4                        !number of part.
@@ -29,8 +33,8 @@ integer::DIM
 real:: BoxSize
 real,dimension(DIM):: posi, posj,distancia
 
-distancia=posi-posj !vector distancia entre particula i y j
+distancia=posi-posj !distance vector between i and j
 
-distancia=distancia-BoxSize*nint(distancia/BoxSize) !condiciones periodicas
+distancia=distancia-BoxSize*nint(distancia/BoxSize) !periodic conditions
 
 end subroutine Refold_Positions
