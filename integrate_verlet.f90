@@ -20,7 +20,7 @@ do i=1,npart
 end do
 
 !Condiciones periódicas de contorno
-call refold_positions(pos,npart,dim,lenght)
+call Refold_Positions(pos,npart,dim,lenght)
    
 end subroutine IntegrationVerletPositions
 
