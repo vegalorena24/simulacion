@@ -23,6 +23,8 @@ do i=1,N
 end do
 close (10)
 
+velocities = 0.0
+
 !MAIN
 
 !call init()
