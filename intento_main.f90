@@ -1,12 +1,12 @@
 program md
 implicit none
-real:: deltat, BoxSize, mass,rc,epot
+real:: deltat, BoxSize, mass,rc,epot, ekin
 integer:: N,dimnsion,Nsteps,i,j,step
 real, dimension(:,:), allocatable:: positions,accel,velocities
 
 !datos de entrada de prueba
 deltat=0.0032
-Nsteps=100
+Nsteps=10000
 N=256
 dimnsion=3
 BoxSize=6.1984
@@ -21,11 +21,13 @@ open (unit=10, File='coordenadas.dat')
 do i=1,N
  read(10,*) positions(i,:)
 end do
-close (10) 
+close (10)
 
 !MAIN
 
 !call init()
+
+open(unit=123,file='energy.dat',status='replace',action='write')
 
 do step=1,Nsteps
 
@@ -35,7 +37,11 @@ do step=1,Nsteps
 
  !call sample
 
-enddo 
+ ekin = sum(mass*norm2(velocities,2)/2.0)
+
+ write(unit=123,fmt='(i10,3f20.10)') step, ekin+epot, ekin, epot
+
+enddo
 
 end program md
 
@@ -134,17 +140,10 @@ end subroutine IntegrationEuler
 
 subroutine Refold_Positions(pos,N,dimnsion,BoxSize)
 implicit none
-integer::dimnsion,N,i !N=Number of part. 
+integer::dimnsion,N,i !N=Number of part.
 real:: BoxSize
 real,dimension(N,dimnsion):: pos !positions
 do i=1,N
  pos(i,:)=pos(i,:)-BoxSize*nint(pos(i,:)/BoxSize) !periodic conditions
 end do
 end subroutine Refold_Positions
-
-
-
-
-
-
-
