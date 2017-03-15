@@ -3,7 +3,7 @@ implicit none
 
 contains
 function T_compute(N,V) result(temperatura)
-    integer(8) :: N!Nombre particules
+    integer(8) :: N!Nombre particules!!
     real(8),dimension(N,3) :: Velocitats!Matriu de velocitats
     real(8) :: temperatura
     temperatura = sum(Velocitats**2.0d0)/(3*N)
