@@ -2,7 +2,7 @@ module analisis
 implicit none
 
 contains
-function T_compute(N,V) result(temperatura)
+function T_compute(N,Velocitats) result(temperatura)
     integer(8) :: N!Nombre particules!!
     real(8),dimension(N,3) :: Velocitats!Matriu de velocitats
     real(8) :: temperatura
