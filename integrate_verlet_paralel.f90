@@ -8,6 +8,8 @@
 
 subroutine IntegrationVerletPositions(pos,vel,forces,deltat,npart,mass,dim,lenght)
 
+include "mpif.h"
+use paralelizar
 
 real,dimension(npart,3),intent(inout)::pos
 real,dimension(npart,3),intent(in)::forces,vel
