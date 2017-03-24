@@ -36,7 +36,7 @@ velocities = 0.0
 
 !MAIN
 
-!call init()
+!call init() 
 
 allocate (ini(0:numproc),fin(0:numproc))
    !distribucion de particulas
