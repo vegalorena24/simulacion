@@ -1,11 +1,12 @@
 
+
 ! ======= EULER POSITIONS ==============================================================================
     subroutine EulerPositions(positions,velocities,forces,particles,dimnsion,BoxSize,mass,deltat)
 
     use paralelizar
     include 'mpif.h'
 
-    real, dimension(particles,dimnsion)  ::  positions, velocities, forces
+    real, dimension(:,:)  ::  positions, velocities, forces
     integer             ::  dimnsion, particles, i, request, Master = 0, iproc, partxproc
     real                ::  BoxSize, deltat, mass
     double precision    ::  start_time, lapso_time, end_time
@@ -65,7 +66,7 @@
     use paralelizar
     include 'mpif.h'
 
-    real,dimension(particles,dimnsion)  ::  velocities, forces
+    real,dimension(:,:)  ::  velocities, forces
     integer           ::  dimnsion, particles, i, request, Master = 0, iproc, partxproc
     real              ::  BoxSize, deltat, mass
     double precision  ::  start_time, lapso_time, end_time
