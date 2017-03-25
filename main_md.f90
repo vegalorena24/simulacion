@@ -244,7 +244,7 @@ real                             :: pot
     !start calculation
     start_time=MPI_Wtime()
     do i=ini(rank),fin(rank)
-     pos(i,:) = pos(i,:) - BoxSize*int(pos(i,:)/BoxSize) !periodic conditions
+     pos(i,:) = pos(i,:) - BoxSize*nint(pos(i,:)/BoxSize) !periodic conditions
     end do
     lapso_time=MPI_Wtime()
 
