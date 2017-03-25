@@ -121,9 +121,9 @@ integer, intent(in)  ::N, dim
 
 ! Integrate positions
 do k = 1, N
-positions(k,1) = positions(k,1) + ( velocities(k,1) + forces(k,1)*deltat ) * deltat
-positions(k,2) = positions(k,2) + ( velocities(k,2) + forces(k,2)*deltat ) * deltat
-positions(k,3) = positions(k,3) + ( velocities(k,3) + forces(k,3)*deltat ) * deltat
+    positions(k,1) = positions(k,1) + ( velocities(k,1) + forces(k,1)*deltat ) * deltat
+    positions(k,2) = positions(k,2) + ( velocities(k,2) + forces(k,2)*deltat ) * deltat
+    positions(k,3) = positions(k,3) + ( velocities(k,3) + forces(k,3)*deltat ) * deltat
 enddo
 
 ! Call PBC subroutine (Lorena)
@@ -131,19 +131,19 @@ call Refold_Positions(positions, N, dim, length)
 
 ! Integrate velocities
 do k = 1, N
-velocities(k,1) = velocities(k,1) + ( forces(k,1) / mass ) * deltat
-velocities(k,2) = velocities(k,2) + ( forces(k,2) / mass ) * deltat
-velocities(k,3) = velocities(k,3) + ( forces(k,3) / mass ) * deltat
+    velocities(k,1) = velocities(k,1) + ( forces(k,1) / mass ) * deltat
+    velocities(k,2) = velocities(k,2) + ( forces(k,2) / mass ) * deltat
+    velocities(k,3) = velocities(k,3) + ( forces(k,3) / mass ) * deltat
 enddo
 
 end subroutine IntegrationEuler
 
 subroutine Refold_Positions(pos,N,dimnsion,BoxSize)
-implicit none
-integer::dimnsion,N,i !N=Number of part.
-real:: BoxSize
-real,dimension(N,dimnsion):: pos !positions
-do i=1,N
- pos(i,:)=pos(i,:)-BoxSize*nint(pos(i,:)/BoxSize) !periodic conditions
-end do
+    implicit none
+    integer::dimnsion,N,i !N=Number of part.
+    real:: BoxSize
+    real,dimension(N,dimnsion):: pos !positions
+    do i=1,N
+        pos(i,:)=pos(i,:)-BoxSize*nint(pos(i,:)/BoxSize) !periodic conditions
+    end do
 end subroutine Refold_Positions
