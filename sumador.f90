@@ -24,7 +24,7 @@ call MPI_REDUCE(suma_part,suma_total,1,MPI_INTEGER,MPI_SUM,MASTER,MPI_COMM_WORLD
 print*,'Hola mon de processador',rank,'de',numproc,'suma',suma_part,'interval',(rank)*interval_index+1,(rank+1)*interval_index
 
 if(rank==MASTER)then
-print*,'MASTER diu, resultat:',suma_total
+    print*,'MASTER diu, resultat:',suma_total
 endif
 
 call MPI_FINALIZE(ierror)

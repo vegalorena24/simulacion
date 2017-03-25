@@ -1,13 +1,33 @@
-!************************************************************
-!*                                                          *
-!*            CALCULATION OF FORCES BY LJ POTENTIAL         *
-!*                                                          *
-!*                             by                           *
-!*                                                          *
-!*                 XABIER MÉNDEZ ARETXABALETA               *
-!*                                                          *
-!************************************************************
+program thest
 
+implicit none
+
+integer                                 :: N, i
+real, dimension(:,:), allocatable       :: pos, forces_mat
+real                                    :: epot, L, start, end
+
+open(unit=123, file='forces_positions.xyz', status='old', action='read')
+read(unit=123, fmt=*) N, L
+
+allocate(pos(N,3),forces_mat(N,3))
+do i = 1, N
+    read(unit=123, fmt=*)   pos(i,:)
+enddo
+close(unit=123)
+
+call cpu_time(start)
+call    forces(pos,L,forces_mat,L,epot)
+call cpu_time(end)
+
+print*, "cpu_time = ", end-start
+
+open(unit=124,file='forces_serie.dat',status='replace',action='write')
+
+do i = 1, N
+    write(unit=124,fmt='(3f20.10)') forces_mat(i,:)
+enddo
+close(unit=124)
+contains
 
 subroutine forces(pos,boxlength,accel,rc,epot)
     real, dimension(:,:), intent(in)  :: pos
@@ -50,11 +70,11 @@ rr2 = 0.d0
 pot = 0.d0
 do l = 1,dim
    rijl = pos(js,l) - pos(is,l)
-   rij(l) = rijl - boxlength*dnint(rijl/boxlength)
+   rij(l) = rijl - boxlength*nint(rijl/boxlength)
    rr2 = rr2 + rij(l)*rij(l)
 end do
 
-rr = dsqrt(rr2)
+rr = sqrt(rr2)
 
 if (rr.lt.rc) then
     forcedist = 24.d0*(2.d0/rr**14-1.0d0/rr**8)
@@ -66,3 +86,4 @@ if (rr.lt.rc) then
 end if
 
 end subroutine
+end program
