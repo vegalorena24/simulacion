@@ -1,3 +1,6 @@
+module integrate_verlet
+implicit none
+contains
 !Integración de las posiciones y las velocidades con Velocity Verlet
 
 !Xavier Marugan
@@ -42,3 +45,4 @@ do i=1,npart
 end do
 
 end subroutine IntegrationVerletVelocities
+end module

@@ -9,7 +9,6 @@
 !************************************************************
 
 
-
 subroutine forces(pos,boxlength,accel,rc,epot)
     real, dimension(:,:), intent(in)  :: pos
     real, dimension(:,:), intent(out) :: accel
