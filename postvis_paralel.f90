@@ -60,9 +60,7 @@ print *, "B: ", b
 MPI_COMM_WORLD,request,ierror)
 end if
 
-call MPI_BARRIER(MPI_COMM_WORLD,ierror) !
-call MPI_BARRIER(MPI_COMM_WORLD,ierror) ! ESPERATE COÑIO YA
-call MPI_BARRIER(MPI_COMM_WORLD,ierror) ! 
+call MPI_BARRIER(MPI_COMM_WORLD,ierror) 
 
 if ( rank == MASTER ) then
 print *, "Master recibe"
