@@ -1,0 +1,9 @@
+para compilar fuerzas y main:
+
+mpif90 -g main_md.f90 forces_mod.f90 -o main
+
+ejecutar:
+
+mpirun -np 2 main 
+
+No subáis el número de partículas, dejadlo a 18 por el momento
