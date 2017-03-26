@@ -1,26 +1,29 @@
 module paralelizar
-integer:: ierror,rank,numproc
-integer, dimension(:),allocatable :: ini, fin
+
+include 'mpif.h'
+integer, public:: ierror,rank,numproc, request, stat
+integer, dimension(:),allocatable, public:: ini, fin
 end module paralelizar
 
 program m
 use paralelizar
+use forces_mod
 implicit none
-include 'mpif.h'
-real:: deltat, BoxSize, mass,rc,epot, ekin,partxproc
+
+real*8 :: deltat, BoxSize, mass,rc,epot, ekin,partxproc
 integer:: N,dimnsion,Nsteps,i,j,step
-real, dimension(:,:), allocatable:: positions,accel,velocities
+real*8, dimension(:,:), allocatable:: positions,accel,velocities
 call MPI_INIT(ierror)
 call MPI_COMM_RANK(MPI_COMM_WORLD,rank,ierror)
 call MPI_COMM_SIZE(MPI_COMM_WORLD,numproc,ierror)
 !datos de entrada de prueba
-deltat=0.0032
+deltat=0.0032d0
 Nsteps=10000
 N=256
 dimnsion=3
-BoxSize=6.1984
-mass=1.0
-rc=2.5
+BoxSize=6.1984d0
+mass=1.0d0
+rc=2.5d0
 
 allocate (positions(N,dimnsion))
 allocate (accel(N,dimnsion))
@@ -32,11 +35,11 @@ do i=1,N
 end do
 close (10)
 
-velocities = 0.0
+velocities = 0.0d0
 
 !MAIN
 
-!call init() 
+!call init()
 
 allocate (ini(0:numproc),fin(0:numproc))
    !distribucion de particulas
@@ -52,7 +55,7 @@ open(unit=123,file='energy.dat',status='replace',action='write')
 
 do step=1,Nsteps
 
- call forces(positions,BoxSize,accel,rc,epot)
+ call forces(positions,BoxSize,ini,fin,accel)
 
  call EulerPositions(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat)
  call EulerVelocities(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat)
@@ -61,7 +64,7 @@ do step=1,Nsteps
 
 ! ekin = sum(mass*norm2(velocities,2)/2.0)
 
- write(unit=123,fmt='(i10,3f20.10)') step, ekin+epot, ekin, epot
+ !write(unit=123,fmt='(i10,3f20.10)') step, ekin+epot, ekin, epot
 
 enddo
 
@@ -69,84 +72,84 @@ call MPI_FINALIZE(ierror)
 
 contains
 
-subroutine forces(positions,boxlength,accel,rc,epot)
-real, dimension(:,:), intent(in)  :: positions
-real, dimension(:,:), intent(out) :: accel
-real, intent(in)                  :: boxlength, rc
-real, intent(out)                 :: epot
-integer                             :: is, js, natoms
-real                             :: pot
+!subroutine forces(positions,boxlength,accel,rc,epot)
+!real, dimension(:,:), intent(in)  :: positions
+!real, dimension(:,:), intent(out) :: accel
+!real, intent(in)                  :: boxlength, rc
+!real, intent(out)                 :: epot
+!integer                             :: is, js, natoms
+!real                             :: pot
 
-       natoms = size(positions,1)
+!   natoms = size(positions,1)
 
-        accel = 0.0d0
-        epot = 0.d0
+!    accel = 0.0d0
+!    epot = 0.d0
 
-        !      atom-atom interactions
+!    !      atom-atom interactions
 
-        do is = 1,natoms-1
-           do js = is+1,natoms
-              call lj(is,js,positions,boxlength,accel,rc,pot)
-              epot = epot + pot
-           end do
-        end do
+!    do is = 1,natoms-1
+!       do js = is+1,natoms
+!          call lj(is,js,positions,boxlength,accel,rc,pot)
+!          epot = epot + pot
+!       end do
+!    end do
 
 
-    end subroutine
+!end subroutine
 
-    subroutine lj(is,js,positions,boxlength,accel,rc,pot)
-    real, dimension(:,:), intent(in)      :: positions
-    real, dimension(:,:), intent(inout)   :: accel
-    real, intent(in)                      :: boxlength, rc
-    integer, intent(in)                     :: is, js
-    real, intent(out)                     :: pot
-    real, dimension(size(positions,2))         :: rij
-    real                                  :: rr2, rijl, rr, forcedist
-    integer                                 :: l, dim
+!subroutine lj(is,js,positions,boxlength,accel,rc,pot)
+!real, dimension(:,:), intent(in)      :: positions
+!real, dimension(:,:), intent(inout)   :: accel
+!real, intent(in)                      :: boxlength, rc
+!integer, intent(in)                     :: is, js
+!real, intent(out)                     :: pot
+!real, dimension(size(positions,2))         :: rij
+!real                                  :: rr2, rijl, rr, forcedist
+!integer                                 :: l, dim
 
-    dim = size(positions,2)
+!dim = size(positions,2)
 
-    rr2 = 0.d0
-    pot = 0.d0
-    do l = 1,dim
-       rijl = positions(js,l) - positions(is,l)
-       rij(l) = rijl - boxlength*nint(rijl/boxlength)
-       rr2 = rr2 + rij(l)*rij(l)
-    end do
+!rr2 = 0.d0
+!pot = 0.d0
+!do l = 1,dim
+!   rijl = positions(js,l) - positions(is,l)
+!   rij(l) = rijl - boxlength*nint(rijl/boxlength)
+!   rr2 = rr2 + rij(l)*rij(l)
+!end do
 
-    rr = sqrt(rr2)
+!rr = sqrt(rr2)
 
-    if (rr.lt.rc) then
-       forcedist = 24*(2/rr**14-1.0/rr**8)
-        pot = 4.0*(1.0/rr**12-1.0/rr**6)
-        do l = 1,dim
-            accel(is,l) = accel(is,l) - forcedist*rij(l)
-            accel(js,l) = accel(js,l) + forcedist*rij(l)
-        end do
-    end if
+!if (rr.lt.rc) then
+!   forcedist = 24*(2/rr**14-1.0/rr**8)
+!    pot = 4.0*(1.0/rr**12-1.0/rr**6)
+!    do l = 1,dim
+!        accel(is,l) = accel(is,l) - forcedist*rij(l)
+!        accel(js,l) = accel(js,l) + forcedist*rij(l)
+!    end do
+!end if
 
-    end subroutine
+!end subroutine
 
 ! ======= EULER POSITIONS ==============================================================================
     subroutine EulerPositions(pos,vel,forces,N,dimnsion,BoxSize,mass,deltat)
 
-    use paralelizar
-    include 'mpif.h'
+    !use paralelizar
+    !include 'mpif.h'
     integer::dimnsion,N,i,request,MASTER=0,iproc,partxproc !N=Number of part.
-    real:: BoxSize, deltat, mass
-    real,dimension(N,dimnsion):: pos, vel, forces !positions
+    real*8:: BoxSize, deltat, mass
+    real*8,dimension(N,dimnsion):: pos, vel, forces !positions
     double precision:: start_time, lapso_time,end_time
 
     !start calculation
     start_time=MPI_Wtime()
     do i=ini(rank),fin(rank)
-     pos(i,:) = pos(i,:) + ( vel(i,:) + deltat*forces(i,:)*0.5/mass ) * deltat
+     pos(i,:) = pos(i,:) + ( vel(i,:) + deltat*forces(i,:)/mass ) * deltat
     end do
     lapso_time=MPI_Wtime()
 
     !sending work of worker(i) to master
     if (rank /= MASTER) then
-    call MPI_ISEND(pos(ini(rank):fin(rank),:),3*(fin(rank)-ini(rank)+1),MPI_REAL,MASTER,1,MPI_COMM_WORLD,request,ierror)
+    call MPI_ISEND(pos(ini(rank):fin(rank),:),3*(fin(rank)-ini(rank)+1),MPI_REAL8,MASTER,1,MPI_COMM_WORLD,request,ierror)
     end if
 
     !waiting all workers
@@ -155,12 +158,12 @@ real                             :: pot
     !master receive and merge
     if ( rank == MASTER ) then
      do iproc=1,numproc-1
-      call MPI_RECV(pos(ini(rank):fin(rank),:),3*(fin(rank)-ini(rank)+1),MPI_REAL,iproc,1,MPI_COMM_WORLD,request,ierror)
+      call MPI_RECV(pos(ini(rank):fin(rank),:),3*(fin(rank)-ini(rank)+1),MPI_REAL8,iproc,1,MPI_COMM_WORLD,request,ierror)
      end do
 
    !UPDATE
     do iproc=1,numproc-1
-     call MPI_ISEND(pos(:,:), 3*N, MPI_REAL, iproc,1,MPI_COMM_WORLD,request,ierror)
+     call MPI_ISEND(pos(:,:), 3*N, MPI_REAL8, iproc,1,MPI_COMM_WORLD,request,ierror)
     end do
     end if
 
@@ -168,7 +171,7 @@ real                             :: pot
     call MPI_BARRIER(MPI_COMM_WORLD,ierror)
     !all workers receive the coord
     if (rank /= MASTER ) then
-      call MPI_RECV(pos(:,:),3*N,MPI_REAL,MASTER,1,MPI_COMM_WORLD,request,ierror)
+      call MPI_RECV(pos(:,:),3*N,MPI_REAL8,MASTER,1,MPI_COMM_WORLD,request,ierror)
     end if
     end_time=MPI_Wtime()
     print*, "rank:", rank, "time calculation:", lapso_time-start_time,"seconds"
@@ -183,11 +186,11 @@ real                             :: pot
 ! ==== EULER VELOCITIES =================================================================
     subroutine EulerVelocities(pos,vel,forces,N,dimnsion,BoxSize,mass,deltat)
 
-    use paralelizar
-    include 'mpif.h'
+    !use paralelizar
+    !include 'mpif.h'
     integer::dimnsion,N,i,request,MASTER=0,iproc,partxproc !N=Number of part.
-    real:: BoxSize, deltat, mass
-    real,dimension(N,dimnsion):: pos, vel, forces !positions
+    real*8:: BoxSize, deltat, mass
+    real*8,dimension(N,dimnsion):: pos, vel, forces !positions
     double precision:: start_time, lapso_time,end_time
 
     !start calculation
@@ -199,7 +202,7 @@ real                             :: pot
 
     !sending work of worker(i) to master
     if (rank /= MASTER) then
-    call MPI_ISEND(pos(ini(rank):fin(rank),:),3*(fin(rank)-ini(rank)+1),MPI_REAL,MASTER,1,MPI_COMM_WORLD,request,ierror)
+    call MPI_ISEND(pos(ini(rank):fin(rank),:),3*(fin(rank)-ini(rank)+1),MPI_REAL8,MASTER,1,MPI_COMM_WORLD,request,ierror)
     end if
 
     !waiting all workers
@@ -208,12 +211,12 @@ real                             :: pot
     !master receive and merge
     if ( rank == MASTER ) then
      do iproc=1,numproc-1
-      call MPI_RECV(pos(ini(rank):fin(rank),:),3*(fin(rank)-ini(rank)+1),MPI_REAL,iproc,1,MPI_COMM_WORLD,request,ierror)
+      call MPI_RECV(pos(ini(rank):fin(rank),:),3*(fin(rank)-ini(rank)+1),MPI_REAL8,iproc,1,MPI_COMM_WORLD,request,ierror)
      end do
 
     !UPDATE
     do iproc=1,numproc-1
-     call MPI_ISEND(pos(:,:), 3*N, MPI_REAL, iproc,1,MPI_COMM_WORLD,request,ierror)
+     call MPI_ISEND(pos(:,:), 3*N, MPI_REAL8, iproc,1,MPI_COMM_WORLD,request,ierror)
     end do
     end if
 
@@ -221,7 +224,7 @@ real                             :: pot
     call MPI_BARRIER(MPI_COMM_WORLD,ierror)
     !all workers receive the coord
     if (rank /= MASTER ) then
-      call MPI_RECV(pos(:,:),3*N,MPI_REAL,MASTER,1,MPI_COMM_WORLD,request,ierror)
+      call MPI_RECV(pos(:,:),3*N,MPI_REAL8,MASTER,1,MPI_COMM_WORLD,request,ierror)
     end if
     end_time=MPI_Wtime()
     print*, "rank:", rank, "time calculation:", lapso_time-start_time,"seconds"
@@ -234,11 +237,11 @@ real                             :: pot
 ! ======================================================================================
     subroutine Refold_Positions(pos,N,dimnsion,BoxSize)
 
-    use paralelizar
-    include 'mpif.h'
+    !use paralelizar
+    !include 'mpif.h'
     integer::dimnsion,N,i,request,MASTER=0,iproc,partxproc !N=Number of part.
-    real:: BoxSize
-    real,dimension(N,dimnsion):: pos !positions
+    real*8:: BoxSize
+    real*8,dimension(N,dimnsion):: pos !positions
     double precision:: start_time, lapso_time,end_time
 
     !start calculation
@@ -250,7 +253,7 @@ real                             :: pot
 
     !sending work of worker(i) to master
     if (rank /= MASTER) then
-    call MPI_ISEND(pos(ini(rank):fin(rank),:),3*(fin(rank)-ini(rank)+1),MPI_REAL,MASTER,1,MPI_COMM_WORLD,request,ierror)
+    call MPI_ISEND(pos(ini(rank):fin(rank),:),3*(fin(rank)-ini(rank)+1),MPI_REAL8,MASTER,1,MPI_COMM_WORLD,request,ierror)
     end if
 
     !waiting all workers
@@ -259,12 +262,12 @@ real                             :: pot
     !master receive and merge
     if ( rank == MASTER ) then
      do iproc=1,numproc-1
-      call MPI_RECV(pos(ini(rank):fin(rank),:),3*(fin(rank)-ini(rank)+1),MPI_REAL,iproc,1,MPI_COMM_WORLD,request,ierror)
+      call MPI_RECV(pos(ini(rank):fin(rank),:),3*(fin(rank)-ini(rank)+1),MPI_REAL8,iproc,1,MPI_COMM_WORLD,request,ierror)
      end do
 
    !UPDATE
     do iproc=1,numproc-1
-     call MPI_ISEND(pos(:,:), 3*N, MPI_REAL, iproc,1,MPI_COMM_WORLD,request,ierror)
+     call MPI_ISEND(pos(:,:), 3*N, MPI_REAL8, iproc,1,MPI_COMM_WORLD,request,ierror)
     end do
     end if
 
@@ -272,7 +275,7 @@ real                             :: pot
     call MPI_BARRIER(MPI_COMM_WORLD,ierror)
     !all workers receive the coord
     if (rank /= MASTER ) then
-      call MPI_RECV(pos(:,:),3*N,MPI_REAL,MASTER,1,MPI_COMM_WORLD,request,ierror)
+      call MPI_RECV(pos(:,:),3*N,MPI_REAL8,MASTER,1,MPI_COMM_WORLD,request,ierror)
     end if
     end_time=MPI_Wtime()
     print*, "rank:", rank, "time calculation:", lapso_time-start_time,"seconds"
