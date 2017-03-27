@@ -8,12 +8,14 @@ end module paralelizar
 
 program m
 use paralelizar
+use analisis
 use forces_mod
 implicit none
 
 real*8 :: deltat, BoxSize, mass,rc,epot, ekin,partxproc
 integer:: N,dimnsion,Nsteps,i,j,step
 real*8, dimension(:,:), allocatable:: positions,accel,velocities
+real(8) :: temperatura,presion
 call MPI_INIT(ierror)
 call MPI_COMM_RANK(MPI_COMM_WORLD,rank,ierror)
 call MPI_COMM_SIZE(MPI_COMM_WORLD,numproc,ierror)
@@ -67,13 +69,16 @@ do step=1,Nsteps
 
  call EulerPositions(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat)
  call EulerVelocities(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat)
-
+temperatura = T_compute_paralel(N,Velocities)
+presion = P_compute_paralel(N,BoxSize,positions,accel,temperatura)
  if ( rank == MASTER ) then
      print *, '******************************************'
      print *, '  step : ', step
      print *, 'r = ', positions(1,:)
      print *, 'v = ', velocities(1,:)
      print *, 'F = ', accel(1,:)
+     print *, 'T = ',temperatura
+     print *, 'P = ',presion
 endif
 
 enddo
