@@ -10,3 +10,5 @@ No subáis el número de partículas, dejadlo a 18 por el momento
 
 
 main_md_xavi.f90 es igual que main_md.f90 con integración por verlet añadida (incluye euler con calls comentados)
+
+main_md_alberto.f90 contiene los cambios de main_md_xavi.f90
