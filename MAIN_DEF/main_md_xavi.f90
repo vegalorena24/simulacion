@@ -252,7 +252,7 @@ double precision:: start_time, lapso_time,end_time
 start_time=MPI_Wtime()
 ! Each worker computes a pice of translation of coordinates
 do i=ini(rank),fin(rank)
-   pos(i,:) = pos(i,:) + deltat*vel(i,:) + 0.5*(deltat**2)*acc(i,:)      ! r(t+dt)
+   pos(i,:) = pos(i,:) + deltat*vel(i,:) + 0.5*(deltat**2)*acc(i,:)/mass      ! r(t+dt)
 end do
 lapso_time=MPI_Wtime()
 ! END CALCULATION
@@ -307,7 +307,7 @@ double precision:: start_time, lapso_time,end_time
 ! START CALCULATION
 start_time=MPI_Wtime()
 do i=ini(rank),fin(rank)
-   vel(i,:) = vel(i,:) + 0.5*deltat*acc(i,:)  ! v(t+dt/2)
+   vel(i,:) = vel(i,:) + 0.5*deltat*acc(i,:)/mass  ! v(t+dt/2)
 end do
 lapso_time=MPI_Wtime()
 ! END CALCULATION
