@@ -14,4 +14,5 @@ main_md_xavi.f90 es igual que main_md.f90 con integración por verlet añadida (
 main_md_alberto.f90 contiene los cambios de main_md_xavi.f90
 
 
-Osea... El main_md_alberto.f90 es el main definitivo que vamos a usar...?
+Osea... El main_md_alberto.f90 es el main definitivo que vamos a usar...? Ya no, en teoría el que ha subido sotiris es el más nuevo osea 
+ELENA COGE el de sotiris en caso que aún no hayas cogido otro.
