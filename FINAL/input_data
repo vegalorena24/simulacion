@@ -1,0 +1,7 @@
+time_increment       0.001
+iterations           500
+number_of_particles  18
+dimension            3
+Box_size             6.1984
+particle_mass        1.0
+rc                   2.5
