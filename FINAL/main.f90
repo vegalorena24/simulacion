@@ -16,7 +16,8 @@ implicit none
 real*8 :: deltat, BoxSize, mass,rc,epot, ekin,partxproc, density
 integer:: N,dimnsion,Nsteps,i,j,step
 integer:: Nrestart,frame
-real*8, dimension(:,:), allocatable:: positions,accel,velocities
+real*8, dimension(:,:), allocatable  :: positions,accel,velocities
+character(len=50)                    :: parameter_name
 !*****************************************************
 
 
