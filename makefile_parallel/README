@@ -1,1 +1,14 @@
-Carpeta makefile para código paralelo
+Hello world again,
+Pues este es del mismo estilo sólo que ahora todo son módulos. En EULER están los integradores y pbc(xavi, sergi, y yo), en sotiris 
+está inicialización de sotiris, en postv (albert), en force_mod (xabi). Y en parametros esta el modulo que llamabamos paralelizar del main.
+He partido del main de sotiris de la carpeta main paralelo.
+Lo he hecho en modulos porque si no parecía que no funcionaba ya que todos necesitaban las variables (aunq más que las variables que 
+tenemos todos definidas en nuestra respectiva subrutina era el mpif.h).
+Cuestión después de muchos errores he conseguido que compile. Osea si haceis make parece todo OK.
+El problema viene al ejecutar que ya eso muere.
+Entonces, si veis los errores que da es como si el init y el finalize en algún momento entrase en conflicto o algo así. 
+Si ALGUIEN lo puede arreglar estaría maravilloso, eso no quita QUE PORQUE NO FUNCIONE NO PONGAIS VUESTRA SUBRUTINA EN MODULO Y HAGAIS EL 
+MAKEFILE :) .
+Dicho esto puede que una vez este el makefile ya bien haga algo en plan phony y clean y algo que lo guarde todo en zip. Todo depende de 
+como me vea de tiempo y si esta todo en algún punto factible de antes de la entrega. (De momento está como pensamiento que dejo aquí)
+
