@@ -5,6 +5,7 @@ use forces_mod
 use albert
 use s
 use integradores
+use analisis
 implicit none
 
 
@@ -14,6 +15,7 @@ real*8 :: deltat, BoxSize, mass,rc,epot, ekin,partxproc, density
 integer:: N,dimnsion,Nsteps,i,j,step
 integer:: Nrestart,frame
 real*8, dimension(:,:), allocatable:: positions,accel,velocities
+real(8) :: temperatura,presion
 call MPI_INIT(ierror)
 call MPI_COMM_RANK(MPI_COMM_WORLD,rank,ierror)
 call MPI_COMM_SIZE(MPI_COMM_WORLD,numproc,ierror)
@@ -82,6 +84,8 @@ do step=1,Nsteps
  call forces(positions,BoxSize,ini,fin,accel)
 
  call IntegrationVerletVelocities(velocities,accel,deltat,N,mass)
+ temperatura = T_compute_paralel(N,velocities)
+ presion = P_compute_paralel(N,BoxSize,positions,accel,temperatura)
  
  !call EulerPositions(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat)
  !call EulerVelocities(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat)
@@ -92,6 +96,8 @@ do step=1,Nsteps
      print *, 'r = ', positions(1,:)
      print *, 'v = ', velocities(1,:)
      print *, 'F = ', accel(1,:)
+     print *, 'T = ', temperatura
+     print *, 'P = ', presion
   endif
 
  !!! Post-Vis

@@ -1,9 +1,11 @@
 program m
 use xabi
 use postvisualization
+use analisis
 implicit none
 
 real*8:: deltat, BoxSize, mass,rc,epot, ekin
+real(8) :: temperatura,presion
 integer:: N,dimnsion,Nsteps,i,j,step,Nrestart,frame,integrar
 real*8, dimension(:,:), allocatable:: positions,accel,velocities
 
@@ -62,6 +64,8 @@ do step=1,Nsteps
  else
  call EulerPositions(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat)
  call EulerVelocities(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat)
+ temperatura = T_compute(N,velocities)
+ presion = P_compute(N,BoxSize,positions,accel,temperatura)
  end if
 
      print *, '******************************************'
@@ -69,6 +73,8 @@ do step=1,Nsteps
      print *, 'r = ', positions(1,:)
      print *, 'v = ', velocities(1,:)
      print *, 'F = ', accel(1,:)
+     print *, 'T = ', temperatura
+     print *, 'P = ', presion
 
 
  !!! Post-Vis
