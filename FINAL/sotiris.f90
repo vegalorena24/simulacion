@@ -193,8 +193,8 @@ call MPI_BARRIER(MPI_COMM_WORLD, ierror)
 
 ! all WORKERS receive coordinates
 if (rank /= MASTER) then
-    call MPI_RECV(positions(:,:),3*particles,MPI_REAL8,MASTER,1,MPI_COMM_WORLD,request,ierror)
-    call MPI_RECV(velocities(:,:),3*particles,MPI_REAL8,MASTER,1,MPI_COMM_WORLD,request,ierror)
+    call MPI_RECV(positions(:,:),3*particles,MPI_REAL8,MASTER,1,MPI_COMM_WORLD,stat,ierror)
+    call MPI_RECV(velocities(:,:),3*particles,MPI_REAL8,MASTER,1,MPI_COMM_WORLD,stat,ierror)
 end if
 
 
