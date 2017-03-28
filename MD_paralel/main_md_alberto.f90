@@ -11,9 +11,6 @@ use paralelizar
 use forces_mod
 implicit none
 
-
-
-
 real*8 :: deltat, BoxSize, mass,rc,epot, ekin,partxproc
 integer:: N,dimnsion,Nsteps,i,j,step
 integer:: Nrestart,frame
@@ -23,24 +20,19 @@ call MPI_COMM_RANK(MPI_COMM_WORLD,rank,ierror)
 call MPI_COMM_SIZE(MPI_COMM_WORLD,numproc,ierror)
 !datos de entrada de prueba
 deltat=0.001
-Nsteps=500
-N=18
+Nsteps=100
+N=4 
 dimnsion=3
 BoxSize=6.1984d0
 mass=1.0d0
 rc=2.5d0
-density=N/(Boxsize**3)
-
-
-call initialize_system(N,density)
 
  !!! Post-Vis
 Nrestart=50
 frame=Nsteps/Nrestart
  !!! Post-Vis
 
-!-------------------------------!open (unit=10, File='coordenadas.dat')
-open (unit=10, File='initial_positions.xyz')
+open (unit=10, File='coordenadas.dat')
 !read(10,*) N, BoxSize
 allocate (positions(N,dimnsion))
 allocate (accel(N,dimnsion))
@@ -80,15 +72,10 @@ open(unit=124,file='restart.rst',status='unknown',action='write')
 
 do step=1,Nsteps
 
- call IntegrationVerletPositions(positions,velocities,accel,deltat,N,mass,dimnsion,BoxSize)
- call IntegrationVerletVelocities(velocities,accel,deltat,N,mass)
-
  call forces(positions,BoxSize,ini,fin,accel)
 
- call IntegrationVerletVelocities(velocities,accel,deltat,N,mass)
- 
- !call EulerPositions(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat)
- !call EulerVelocities(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat)
+ call EulerPositions(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat)
+ call EulerVelocities(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat)
 
  if ( rank == MASTER ) then
      print *, '******************************************'
@@ -113,232 +100,7 @@ call postvisual(frame,dimnsion,N)
 
 call MPI_FINALIZE(ierror)
 
-
-
-
-
-
-
-
-
-
 contains
-
-!==============================SUBRUTINA DE INICIALIZACION=======================================
-
-subroutine initialize_system(particles,density)
-implicit none
-
-
-integer                                         :: ierror, request, rank, numproc, MASTER, iproc
-integer                                         :: stat(MPI_STATUS_SIZE)
-integer                                         :: partxproc
-double precision                                :: start_time, lapso_time1, lapso_time2, end_time
-
-double precision                                :: density
-integer                                         :: particles
-double precision, dimension (:,:), allocatable  :: positions, velocities, v_cm
-double precision, dimension (3)                 :: displacement, Vcm=0.0
-double precision                                :: L, dr
-integer                                         :: lin_dim, N, i, last
-!character(len=50)                               :: parameter_name
-
-
-            !RANDOM NUMBER VARIABLES
-            INTEGER :: ii, nn, clock
-            INTEGER, DIMENSION(:), ALLOCATABLE :: seed
-
-
-
-
-call MPI_INIT(ierror)
-call MPI_COMM_RANK(MPI_COMM_WORLD,rank, ierror)
-call MPI_COMM_SIZE(MPI_COMM_WORLD, numproc, ierror)
-
-
-!open(100,file="input_data")
-
- !   read(100,*) parameter_name, particles        
- !   read(100,*) parameter_name, density         
-
-!close(100)
-
-
-
-            !RANDOM NUMBER SEED GENERATION
-            CALL RANDOM_SEED(size = nn)
-            ALLOCATE(seed(nn))
-    
-            CALL SYSTEM_CLOCK(COUNT=clock)
-    
-            seed = clock + 37 * (/ (ii - 1, ii = 1, nn) /)
-            CALL RANDOM_SEED(PUT = seed)
-    
-            DEALLOCATE(seed)
-
-
-
-
-
-MASTER=0
-partxproc=nint(real(particles)/real(numproc))
-
-L=(particles/density)**(1.0/3.0)
-lin_dim=ceiling(particles**(1.0/3.0))
-dr=L/(lin_dim+1)
-
-
-!if (rank==MASTER) print*, "partxproc:",partxproc, "L:",L, "lin_dim:",lin_dim, "dr:",dr, "numproc:",numproc
-
-
-! Defining dimensions
-allocate (positions(particles,3),velocities(particles,3),v_cm(0:numproc-1,3))
-v_cm=0.0
-
-
-start_time=MPI_Wtime()
-
-if (rank /= numproc-1) then 
-  do i=1, partxproc
-    
-    N=partxproc*rank+i
-    !print*, N, "from rank:", rank
-
-    positions(N,1)=mod(N,lin_dim)
-    if (positions(N,1)==0) positions(N,1)=lin_dim
-
-    positions(N,2)=mod((N-1)/lin_dim+1,lin_dim)
-    if (positions(N,2)==0) positions(N,2)=lin_dim
-
-    positions(N,3)=((N-1)/(lin_dim**2)+1)
-
-
-    call random_number(displacement)
-    positions(N,:)=positions(N,:)*dr-L/2+(displacement-0.5)*dr*(3.0/4.0)
-    call random_number(velocities(N,:))
-    velocities(N,:)=velocities(N,:)-0.5
-    v_cm(rank,:)=v_cm(rank,:)+velocities(N,:)
-
-  end do
-  lapso_time1=MPI_Wtime()
-  if (rank /= MASTER) then
-    call MPI_ISEND(positions(partxproc*rank+1:partxproc*(rank+1),:),3*partxproc,&
-    MPI_DOUBLE_PRECISION,MASTER,1,MPI_COMM_WORLD,request,ierror)
-
-    call MPI_ISEND(velocities(partxproc*rank+1:partxproc*(rank+1),:),3*partxproc,&
-    MPI_DOUBLE_PRECISION,MASTER,2,MPI_COMM_WORLD,request,ierror)
-
-    call MPI_ISEND(v_cm(rank,:),3,MPI_DOUBLE_PRECISION,MASTER,3,MPI_COMM_WORLD,request,ierror)
-  end if
-end if
-
-
-
-if (rank==numproc-1) then
-last=particles - partxproc*(numproc-1)
-  do i=1, last
-
-    N=partxproc*rank+i
-    !print*, N, "from rank:", rank
-
-    positions(N,1)=mod(N,lin_dim)
-    if (positions(N,1)==0) positions(N,1)=lin_dim
-
-    positions(N,2)=mod((N-1)/lin_dim+1,lin_dim)
-    if (positions(N,2)==0) positions(N,2)=lin_dim
-
-    positions(N,3)=((N-1)/(lin_dim**2)+1)
-
-
-    call random_number(displacement)
-    positions(N,:)=positions(N,:)*dr-L/2+(displacement-0.5)*dr*(3.0/4.0)
-    call random_number(velocities(N,:))
-    velocities(N,:)=velocities(N,:)-0.5
-    v_cm(rank,:)=v_cm(rank,:)+velocities(N,:)
-
-  end do
-  lapso_time2=MPI_Wtime()
-
-  call MPI_ISEND(positions(partxproc*rank+1:partxproc*rank+last,:),3*last,&
-  MPI_DOUBLE_PRECISION,MASTER,1,MPI_COMM_WORLD,request,ierror)
-
-  call MPI_ISEND(velocities(partxproc*rank+1:partxproc*rank+last,:),3*last,&
-  MPI_DOUBLE_PRECISION,MASTER,2,MPI_COMM_WORLD,request,ierror)
-  
-  call MPI_ISEND(v_cm(rank,:),3,MPI_DOUBLE_PRECISION,MASTER,3,MPI_COMM_WORLD,request,ierror)
-end if
-
-
-
-! Waiting all WORKERS
-call MPI_BARRIER(MPI_COMM_WORLD, ierror)
-
-
-
-! MASTER receive and merge
-if (rank == MASTER) then
-  last=particles - partxproc*(numproc-1)
-
-  do iproc=1,numproc-2
-  !print*, "from processor:", iproc, "-------------------------"
-    call MPI_RECV(positions(partxproc*iproc+1:partxproc*(iproc+1),:),3*partxproc,&
-    MPI_DOUBLE_PRECISION,iproc,1,MPI_COMM_WORLD,stat,ierror)
-    call MPI_RECV(velocities(partxproc*iproc+1:partxproc*(iproc+1),:),3*partxproc,&
-    MPI_DOUBLE_PRECISION,iproc,2,MPI_COMM_WORLD,stat,ierror)
-    call MPI_RECV(v_cm(iproc,:),3,MPI_DOUBLE_PRECISION,iproc,3,MPI_COMM_WORLD,stat,ierror)
-  end do
-
-  call MPI_RECV(positions(partxproc*(numproc-1)+1:partxproc*(numproc-1)+last,:),3*last,&
-  MPI_DOUBLE_PRECISION,(numproc-1),1,MPI_COMM_WORLD,stat,ierror)
-  call MPI_RECV(velocities(partxproc*(numproc-1)+1:partxproc*(numproc-1)+last,:),3*last,&
-  MPI_DOUBLE_PRECISION,(numproc-1),2,MPI_COMM_WORLD,stat,ierror)
-  call MPI_RECV(v_cm(numproc-1,:),3,MPI_DOUBLE_PRECISION,(numproc-1),3,MPI_COMM_WORLD,stat,ierror)
-end if  
-
-
-
-end_time=MPI_Wtime()
-if (rank/=numproc-1) then
-print *,"rank: ",rank," time calculation: ",lapso_time1-start_time,"seconds"
-end if
-if (rank==numproc-1) then
-print *,"rank: ",rank," time calculation: ",lapso_time2-start_time,"seconds"
-end if
-if (rank== MASTER) then
-  print *,"MASTER. Updating information. Time: ",end_time-lapso_time1," seconds"
-endif
-
-
-
-if(rank==MASTER) then
-
-do i=1,3
-  Vcm(i)=sum(v_cm(:,i))
-end do
-
-!print*, Vcm/particles
-
-! Writing final coordinates
-open(unit=1, file='initial_positions.xyz')
-open(unit=2, file='initial_velocities.xyz')
-write(1,*) particles
-write(1,*) 'iniital positions'
-write(2,*) particles
-write(2,*) 'initial velocities'
-do i=1,particles
-  write(1,*) 'H', positions(i,:) 
-  write(2,*) 'H', velocities(i,:) - Vcm/particles
-end do
-close(1)
-close(2)
-end if
-
-end subroutine initialize_system
-
-!======================================================================================================
-
-
-
 
 
 ! ======= EULER POSITIONS ==============================================================================
@@ -488,115 +250,6 @@ end subroutine initialize_system
     end subroutine Refold_Positions
 ! ======================================================================================
 
-subroutine IntegrationVerletPositions(pos,vel,acc,deltat,npart,mass,dim,lenght)
-
-!include "mpif.h"
-!use paralelizar
-
-real*8,dimension(npart,3),intent(inout)::pos
-real*8,dimension(npart,3),intent(in)::acc,vel
-real*8,intent(in)::deltat,mass,lenght
-integer::npart,dim,MASTER=0,iproc,partxproc,request
-integer::i,ip
-double precision:: start_time, lapso_time,end_time
-
-! START CALCULATION
-start_time=MPI_Wtime()
-! Each worker computes a pice of translation of coordinates
-do i=ini(rank),fin(rank)
-   pos(i,:) = pos(i,:) + deltat*vel(i,:) + 0.5*(deltat**2)*acc(i,:)/mass      ! r(t+dt)
-end do
-lapso_time=MPI_Wtime()
-! END CALCULATION
-
-! sending work of WORKER(i) to MASTER
-if (rank /= MASTER) then
-        call MPI_ISEND(pos(ini(rank):fin(rank),:),3*(fin(rank)-ini(rank)+1),&
-MPI_DOUBLE_PRECISION,MASTER,1,MPI_COMM_WORLD,request,ierror)
-end if
-! Waiting all WORKERS
-call MPI_BARRIER(MPI_COMM_WORLD, ierror)
-
-! MASTER receive and merge
-if (rank == MASTER) then
-  do iproc=1,numproc-1
-    call MPI_RECV(pos(ini(iproc):fin(iproc),:),3*(fin(iproc)-ini(iproc)+1),&
-MPI_DOUBLE_PRECISION,iproc,1,MPI_COMM_WORLD,request,ierror)
-  end do
-
-!!! UPDATE the coordinations of MASTER to WORKERS
-  do iproc=1,numproc-1
-    call MPI_ISEND(pos(:,:),3*npart,MPI_REAL8,iproc,1,MPI_COMM_WORLD,request,ierror)
-  end do
-end if
-
-! Sincronize all processors
-call MPI_BARRIER(MPI_COMM_WORLD, ierror)
-
-! all WORKERS receive coordinates
-if (rank /= MASTER) then
-    call MPI_RECV(pos(:,:),3*npart,MPI_REAL8,MASTER,1,MPI_COMM_WORLD,request,ierror)
-end if
-end_time=MPI_Wtime()
-
-!Condiciones periódicas de contorno
-call Refold_Positions(pos,npart,dim,lenght)
-
-end subroutine IntegrationVerletPositions
-
-! ======================================================================================
-subroutine IntegrationVerletVelocities(vel,acc,deltat,npart,mass)
-
-!include "mpif.h"
-!use paralelizar
-
-real*8,dimension(npart,3),intent(inout)::vel
-real*8,dimension(npart,3),intent(in)::acc
-real*8,intent(in)::deltat,mass
-integer::npart,MASTER=0,iproc,partxproc,request
-double precision:: start_time, lapso_time,end_time
-
-! START CALCULATION
-start_time=MPI_Wtime()
-do i=ini(rank),fin(rank)
-   vel(i,:) = vel(i,:) + 0.5*deltat*acc(i,:)/mass  ! v(t+dt/2)
-end do
-lapso_time=MPI_Wtime()
-! END CALCULATION
-
-! sending work of WORKER(i) to MASTER
-if (rank /= MASTER) then
-        call MPI_ISEND(vel(ini(rank):fin(rank),:),3*(fin(rank)-ini(rank)+1),&
-MPI_DOUBLE_PRECISION,MASTER,1,MPI_COMM_WORLD,request,ierror)
-end if
-! Waiting all WORKERS
-call MPI_BARRIER(MPI_COMM_WORLD, ierror)
-
-! MASTER receive and merge
-if (rank == MASTER) then
-  do iproc=1,numproc-1
-    call MPI_RECV(vel(ini(iproc):fin(iproc),:),3*(fin(iproc)-ini(iproc)+1),&
-MPI_DOUBLE_PRECISION,iproc,1,MPI_COMM_WORLD,request,ierror)
-  end do
-
-!!! UPDATE the coordinations of MASTER to WORKERS
-  do iproc=1,numproc-1
-    call MPI_ISEND(vel(:,:),3*npart,MPI_REAL8,iproc,1,MPI_COMM_WORLD,request,ierror)
-  end do
-end if
-
-! Sincronize all processors
-call MPI_BARRIER(MPI_COMM_WORLD, ierror)
-
-! all WORKERS receive coordinates
-if (rank /= MASTER) then
-    call MPI_RECV(vel(:,:),3*npart,MPI_REAL8,MASTER,1,MPI_COMM_WORLD,request,ierror)
-end if
-end_time=MPI_Wtime()
-
-end subroutine IntegrationVerletVelocities
-! ======================================================================================
-
 
 ! ==== POSTVISUALIZATION ================================================================
 subroutine postvisual(snaps,dimen,part)
@@ -617,7 +270,6 @@ integer                 :: partxproc               ! Number of particles per pro
 
 ! Read coordinates of the trajectory (restart xyz file)
   open(unit=126,file='restart.rst',status='unknown',action='read')
-    print *, "Leyendo"
     do i=1,snaps*part
       read(126,*), input(i,1), input(i,2), input(i,3)
     end do
@@ -634,13 +286,11 @@ integer                 :: partxproc               ! Number of particles per pro
 
 
 ! Calculate the rmsd for each particle
-print *, "Calculamos", rank
 call desplace(input,snaps,dimen,part,desplacement,ini(rank),fin(rank),part)
 call MPI_BARRIER(MPI_COMM_WORLD,ierror)
 
 ! Send the calculated distances to the MASTER
 if (rank /= MASTER) then
-  print *, "Rank --> master"
   a=ini(rank)
   b=fin(rank)
   call MPI_ISEND(desplacement(:,a:b),snaps*(b-a+1),MPI_DOUBLE_PRECISION,MASTER,2,&
@@ -651,7 +301,6 @@ call MPI_BARRIER(MPI_COMM_WORLD,ierror)
 
 if ( rank == MASTER ) then
   do ip=1,numproc-1
-    print *, "Master <-- rank", rank
     a=ini(ip)
     b=fin(ip)
     call MPI_RECV(desplacement(:,a:b),(snaps*(b-a+1)),MPI_DOUBLE_PRECISION,ip,2,&
@@ -660,7 +309,6 @@ MPI_COMM_WORLD,stat,ierror)
 
 ! Write output file
   open(unit=125,file='desplazamientos.dat',status='unknown',action='write')
-    print *, "Imprimiendo"
     do i=1,snaps
       write(125,*), desplacement(i,:)
     end do
