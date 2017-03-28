@@ -6,6 +6,7 @@ use paralelizar
 use s
 use forces_mod
 use integrators
+use postvisualization  
 implicit none
 !*****************************************************
 
@@ -41,11 +42,13 @@ open(100,file="input_data")
     read(100,*) parameter_name, BoxSize
     read(100,*) parameter_name, mass
     read(100,*) parameter_name, rc
+    read(100,*) parameter_name, Nrestart
  
 close(100)
  
  
 density=dble(N)/(Boxsize**3)
+frame=Nsteps/Nrestart
 
 
 allocate (positions(N,dimnsion))
@@ -77,7 +80,9 @@ fin(numproc-1)=N
 
 
 
-
+if (rank==MASTER) then
+  open(unit=999,file='restart.rst',status='unknown',action='write')
+end if
 !**************MAIN LOOP*********************************
 if (rank==MASTER) print*, "COMPUTING MAIN LOOP OF MOLECULAR DYNAMICS"
 do i = 1, Nsteps
@@ -85,9 +90,25 @@ do i = 1, Nsteps
     call EulerPositions(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat,ini,fin)
     call Refold_Positions(positions,N,dimnsion,BoxSize,ini,fin)
     call EulerVelocities(velocities,accel,N,dimnsion,BoxSize,mass,deltat,ini, fin)
+    if (rank==MASTER) then
+      if (mod(step,Nrestart)==0) then
+        do j=1,N
+          write(999,*), positions(i,:)
+        end do
+      end if
+    end if
 enddo
 if (rank==MASTER) print*, "MAIN LOOP DONE"
 !********************************************************
+if (rank==MASTER) then
+  close(999)
+end if
+
+
+!******************POSTVISUALIZACIÓN*********************
+call postvisual(frame,dimnsion,N,ini,fin)
+!********************************************************
+
 
 
 
