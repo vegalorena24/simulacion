@@ -25,7 +25,7 @@ dimnsion=3
 BoxSize=6.1984d0
 mass=1.0d0
 rc=2.5d0
-density=N/(Boxsize**3)
+density=dble(N)/(Boxsize**3)
 
 allocate (positions(N,dimnsion))
 allocate (accel(N,dimnsion))
