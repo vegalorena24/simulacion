@@ -20,6 +20,7 @@ dimnsion=3
 BoxSize=6.1984
 mass=1.0
 rc=2.5
+density=dble(N)/(BoxSize**3)
 
 !!! Post-Vis
 Nrestart=50
@@ -29,19 +30,19 @@ frame=Nsteps/Nrestart
 allocate (positions(N,dimnsion))
 allocate (accel(N,dimnsion))
 allocate (velocities(N,dimnsion))
-open (unit=10, File='coordenadas.dat')
+!open (unit=10, File='coordenadas.dat')
 
 !!! Post-Vis
 open(unit=124,file='restart.rst',status='unknown',action='write')
  !!! Post-Vis
 
 
-do i=1,N
- read(10,*) positions(i,:)
-end do
-close (10)
+!do i=1,N
+! read(10,*) positions(i,:)
+!end do
+!close (10)
 
-velocities = 0.0
+!velocities = 0.0
 
 !MAIN
 
@@ -50,6 +51,7 @@ velocities = 0.0
 
 open(unit=123,file='energy.dat',status='replace',action='write')
 
+call initialize_system(N,density,positions,velocities)
 
 
 do step=1,Nsteps
