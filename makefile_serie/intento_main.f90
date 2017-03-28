@@ -5,7 +5,7 @@ use analisis
 implicit none
 
 real*8:: deltat, BoxSize, mass,rc,epot, ekin
-real(8) :: temperatura,presion
+real(8) :: temperatura,presion,density
 integer:: N,dimnsion,Nsteps,i,j,step,Nrestart,frame,integrar
 real*8, dimension(:,:), allocatable:: positions,accel,velocities
 
