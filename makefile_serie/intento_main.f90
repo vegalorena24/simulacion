@@ -14,8 +14,8 @@ read(5,*) integrar
 
 !datos de entrada de prueba
 deltat=0.001
-Nsteps=100
-N=18
+Nsteps=1000
+N=200
 dimnsion=3
 BoxSize=6.1984
 mass=1.0
@@ -53,16 +53,15 @@ open(unit=123,file='energy.dat',status='replace',action='write')
 
 call initialize_system(N,density,positions,velocities)
 
-
+call forces(positions,BoxSize,accel,rc,epot)
 do step=1,Nsteps
  if ( integrar .eq. 1 ) then
- !call IntegrationVerletPositions(positions,velocities,accel,deltat,N,mass,dimnsion,BoxSize)
- !call IntegrationVerletVelocities(velocities,accel,deltat,N,mass)
+ call IntegrationVerletPositions(positions,velocities,accel,deltat,N,mass,dimnsion,BoxSize)
+ call IntegrationVerletVelocities(velocities,accel,deltat,N,mass)
  end if
  call forces(positions,BoxSize,accel,rc,epot)
  if ( integrar .eq. 1 ) then
- !call IntegrationVerletVelocities(velocities,accel,deltat,N,mass)
- print*, "funciona el if"
+ call IntegrationVerletVelocities(velocities,accel,deltat,N,mass)
  else
  call EulerPositions(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat)
  call EulerVelocities(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat)
@@ -70,13 +69,13 @@ do step=1,Nsteps
  presion = P_compute(N,BoxSize,positions,accel,temperatura)
  end if
 
-     print *, '******************************************'
-     print *, '  step : ', step
-     print *, 'r = ', positions(1,:)
-     print *, 'v = ', velocities(1,:)
-     print *, 'F = ', accel(1,:)
-     print *, 'T = ', temperatura
-     print *, 'P = ', presion
+!     print *, '******************************************'
+!     print *, '  step : ', step
+!     print *, 'r = ', positions(1,:)
+!     print *, 'v = ', velocities(1,:)
+!     print *, 'F = ', accel(1,:)
+!     print *, 'T = ', temperatura
+!     print *, 'P = ', presion
 
 
  !!! Post-Vis
@@ -86,8 +85,7 @@ do step=1,Nsteps
     end do
   end if
  !!! Post-Vis
-
- ekin = sum(mass*norm2(velocities,2)/2.0)
+ ekin = sum(mass*sqrt(sum(velocities**2,2))/2.0)
 
  write(unit=123,fmt='(i10,3f20.10)') step, ekin+epot, ekin, epot
 
