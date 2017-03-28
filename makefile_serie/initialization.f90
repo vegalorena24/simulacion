@@ -66,9 +66,9 @@ do z=1,lin_dim
 enddo
 
 call random_number(displacement)
-positions=positions-(displacement-0.5)*dr*(3.0/4.0)
+!positions=positions-(displacement-0.5)*dr*(3.0/4.0)
 call random_number(velocities)
-velocities=velocities-0.5
+velocities=0.0!velocities-0.5
 
 do i=1,3
   Vcm(i)=sum(velocities(:,i))
