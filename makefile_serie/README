@@ -1,1 +1,31 @@
-Carpeta de makefile en serie
+Hello world,
+He hecho un makefile en serie que funciona y he comparado con un programa en que todas las subrutinas estaban en el mismo archivo y da lo 
+mismo.
+Así que is good. Cosas a comentar sobre el funcionamiento porque las subrutinas que hasta esta noche no he tenido o faltaba comprobación 
+pues van a completar este makefile.
+El makefile compila modulos y subrutinas por cuestión de como me han llegado y venían más fácil. 
+1)MÓDULOS: xabi y albert (xabi porque si no tenia que cambiar una cosa de como ya tenía montada la historia y albert porque viene con un 
+función.)
+ - En caso de que hagais módulo para el makefile es un poco más complejo pero no mucho, simplemente teneis que:
+   1* si vuestro modulo esta guardado en modulo.f90 pues poned una línea :
+      modulo.o : modulo.f90
+        (tabulador) gfortran -c modulo.f90
+   2* además allá donde esta el main (última línia añadir modulo.o a la linia "intento_main.o : intento_main.f90 blabla.o blabla.o (aquí la 
+   poneís modulo.o)
+   3* por último a retocar en el makefile, vais a la primera linea donde esta mainMD y poneis vuestro modulo.o de la misma manera que 
+   en el 2* así como en la linea de compilación que hay justo debajo.
+   4* último y no menos importante, si haceis un modulo poned en el intento_main (el main) use (nombre del modulo). 
+      OJO no confundir el nombre del modulo con el nombre del programa que contiene el modulo.
+2) SUBRUTINAS: more easy
+    Hacer paso 1* solo que en vez de ser un modulo será una subrutina, y el paso 3*.
+Una vez hecho esto simplemente alla dónde tengáis todo lo que esta en esta carpeta ponéis en terminal "make" y listo, a disfrutar.
+Ejecutais ./mainMD.
+Os cuelgo también aquí para los más vagos el main_mserie que he empleado yo para ver que efectivamente tanto el make como el programa 
+de una pieza va. Lo tuyo xavi no estaba, ni lo tuyo albert, life is hard. Yo lo que hacia era mirar que el archivo de coord_serie.dat que 
+imprime mi subrutina cuadraba,osea daba igual así como energy.dat.
+---------------------------------------------------------------------------------------------------------------------
+-----------------------------ULTRA MODIFICACIÓN GUAY ( sugerencia Xavi ) --------------------------------------------
+---------------------------------------------------------------------------------------------------------------------
+UNA VEZ SE EJECUTA EL PROGRAMA SE PIDE AL USUARIO QUE ELIJA ENTRE INTEGRADOR DE VERLET Y EULER, dependiendo si marca 1 o otro número,
+respectivamente.
+XAVI -> verás que te he puesto donde deberias insertar los calls según los tenias en el paralelizado.

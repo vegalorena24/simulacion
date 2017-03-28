@@ -40,12 +40,12 @@ enddo
 
 !SENDING DATA FROM WORKERS TO MASTER
 if (rank /= MASTER) then
-	call MPI_SEND(interaction_mat(ini(rank):fin(rank),:,:),N*(fin(rank)-ini(rank)+1)*3,&
+	call MPI_ISEND(interaction_mat(ini(rank):fin(rank),:,:),N*(fin(rank)-ini(rank)+1)*3,&
 		MPI_DOUBLE_PRECISION,MASTER,1,MPI_COMM_WORLD,request,ierror)
 endif
 
 !WAITING
-!call MPI_BARRIER(MPI_COMM_WORLD,ierror)
+call MPI_BARRIER(MPI_COMM_WORLD,ierror)
 
 !MASTER RECIEVE
 if (rank == MASTER) then
