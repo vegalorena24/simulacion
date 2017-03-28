@@ -199,15 +199,15 @@ end if
 
 
 end_time=MPI_Wtime()
-if (rank/=numproc-1) then
-print *,"rank: ",rank," time calculation: ",lapso_time1-start_time,"seconds"
-end if
-if (rank==numproc-1) then
-print *,"rank: ",rank," time calculation: ",lapso_time2-start_time,"seconds"
-end if
-if (rank== MASTER) then
-  print *,"MASTER. Updating information. Time: ",end_time-lapso_time1," seconds"
-endif
+!if (rank/=numproc-1) then
+!print *,"rank: ",rank," time calculation: ",lapso_time1-start_time,"seconds"
+!end if
+!if (rank==numproc-1) then
+!print *,"rank: ",rank," time calculation: ",lapso_time2-start_time,"seconds"
+!end if
+!if (rank== MASTER) then
+!  print *,"MASTER. Updating information. Time: ",end_time-lapso_time1," seconds"
+!endif
 
 
 

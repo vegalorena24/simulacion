@@ -1,5 +1,7 @@
-MAIN : parametros.o main.o sotiris.o
-	mpif90 -o MAIN parametros.o main.o sotiris.o
+MAIN : parametros.o main.o sotiris.o forces_mod.o
+	mpif90 -o MAIN parametros.o main.o sotiris.o forces_mod.o
+forces_mod.o : forces_mod.f90 parametros.o
+	mpif90 -c forces_mod.f90
 sotiris.o : sotiris.f90 parametros.o
 	mpif90 -c sotiris.f90
 parametros.o : parametros.f90
