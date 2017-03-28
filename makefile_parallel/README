@@ -8,7 +8,10 @@ Cuestión después de muchos errores he conseguido que compile. Osea si haceis m
 El problema viene al ejecutar que ya eso muere.
 Entonces, si veis los errores que da es como si el init y el finalize en algún momento entrase en conflicto o algo así. 
 Si ALGUIEN lo puede arreglar estaría maravilloso, eso no quita QUE PORQUE NO FUNCIONE NO PONGAIS VUESTRA SUBRUTINA EN MODULO Y HAGAIS EL 
-MAKEFILE :) .
+MAKEFILE :) . Podeis copiar y pegar vuestra subrutina en un modulo ya existente, p.e Elena lo puedes pegar en el de Xabi y asi te ahorras 
+modificar el makefile. 
+ESO SI UNA VEZ HECHO EL MAKEFILE BIEN HABRÍA QUE HACER ALGO ESTILO LO ANTERIOR CON IF'S PARA QUE EL USUARIO DECIDA SI COGE A XABI O ELENA,
+O SERGI Y XAVI.
 Dicho esto puede que una vez este el makefile ya bien haga algo en plan phony y clean y algo que lo guarde todo en zip. Todo depende de 
 como me vea de tiempo y si esta todo en algún punto factible de antes de la entrega. (De momento está como pensamiento que dejo aquí)
 
