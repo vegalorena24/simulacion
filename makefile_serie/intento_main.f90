@@ -1,7 +1,7 @@
 program m
 use xabi
 use postvisualization
-use analisis
+use analisis2
 implicit none
 
 real*8:: deltat, BoxSize, mass,rc,epot, ekin
@@ -19,7 +19,7 @@ N=18
 dimnsion=3
 BoxSize=6.1984
 mass=1.0
-rc=2.5
+rc=BoxSize
 density=dble(N)/(BoxSize**3)
 
 !!! Post-Vis
@@ -87,7 +87,7 @@ do step=1,Nsteps
   end if
  !!! Post-Vis
 
-! ekin = sum(mass*norm2(velocities,2)/2.0)
+ ekin = sum(mass*norm2(velocities,2)/2.0)
 
  write(unit=123,fmt='(i10,3f20.10)') step, ekin+epot, ekin, epot
 
