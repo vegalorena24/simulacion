@@ -59,7 +59,7 @@ do
 	
 	if [ "$NProcesadors" -eq 2 ]
 	then
-		echo "plot '"time_$NProcesadors.dat"' u 1:2 t 'paral·lel amb "$NProcesadors" procs.','' u 1:3 t 'serie',\\">&4
+		echo "plot '"time_$NProcesadors.dat"' u 1:2 t 'paral·lel amb "$NProcesadors" procs.',\\">&4
 	else
 		echo "'"time_$NProcesadors.dat"' u 1:2 t 'paral·lel amb "$NProcesadors" procs.',\\">&4
 	fi
@@ -71,14 +71,26 @@ do
 
 		time_paralel=$( { /usr/bin/time -f "%e" mpirun -np $NProcesadors ./main $NParticles; } 2>&1)
 
-		cd $thisDir/MD_serie
+		#cd $thisDir/MD_serie
 
-		time_series=$( { /usr/bin/time -f "%e"  ./main $NParticles; } 2>&1)
+		#time_series=$( { /usr/bin/time -f "%e"  ./main $NParticles; } 2>&1)
 
-		echo $NParticles'\t'$time_paralel'\t'$time_series >&3
+		echo $NParticles'\t'$time_paralel #'\t'$time_series >&3
 	done 
 	exec 3<&- 
 done
+
+echo "'time_series.dat' u 1:2 t 'serie'\\">&4
+exec 3> time_series.dat
+for NParticles in $(seq 1 $maxParticles)
+do
+
+	cd $thisDir/MD_serie
+
+	time_series=$( { /usr/bin/time -f "%e"  ./main $NParticles; } 2>&1)
+
+	echo $NParticles'\t'$time_series #'\t'$time_series >&3
+done 
+
 	cd $thisDir
-sed -i '$s/,\\$//g' plot_times.gp 
-echo 'pause(-1)'
+echo 'pause(-1)'>&4
