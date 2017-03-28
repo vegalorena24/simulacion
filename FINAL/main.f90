@@ -32,18 +32,6 @@ call MPI_COMM_SIZE(MPI_COMM_WORLD,numproc,ierror)
 
 
 !******************INPUT******************************
-!Este debería de estar en un fichero
-!datos de entrada de prueba
-!deltat=0.001
-!Nsteps=500
-!N=18
-!dimnsion=3
-!BoxSize=6.1984d0
-!mass=1.0d0
-!rc=2.5d0
-!density=dble(N)/(Boxsize**3)
-
-!datos de entrada de prueba
 open(100,file="input_data")
  
     read(100,*) parameter_name, deltat
