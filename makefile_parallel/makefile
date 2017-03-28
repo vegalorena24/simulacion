@@ -1,5 +1,5 @@
-MAIN : main_md_sotiris.o postv.o forces_mod.o sotiris.o EULER.o  parametros.o
-	mpif90 -o MAIN main_md_sotiris.o postv.o forces_mod.o sotiris.o  EULER.o  parametros.o
+MAIN : parametros.o main_md_sotiris.o postv.o forces_mod.o sotiris.o EULER.o
+	mpif90 -o MAIN parametros.o main_md_sotiris.o postv.o forces_mod.o sotiris.o  EULER.o
 EULER.o : EULER.f90 parametros.o
 	mpif90 -c EULER.f90
 sotiris.o : sotiris.f90 parametros.o
