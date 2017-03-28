@@ -1,5 +1,7 @@
-mainMD : intento_main.o pbc.o integrate_euler.o f_xabi_2.o mod_postvis_serie.o
-	gfortran -o mainMD intento_main.o pbc.o integrate_euler.o f_xabi_2.o mod_postvis_serie.o
+mainMD : intento_main.o pbc.o integrate_euler.o f_xabi_2.o mod_postvis_serie.o initialization.o
+	gfortran -o mainMD intento_main.o pbc.o integrate_euler.o f_xabi_2.o mod_postvis_serie.o initialization.o
+initialization.o : initialization.f90
+	gfortran -c initialization.f90
 pbc.o : pbc.f90
 	gfortran -c pbc.f90
 integrate_euler.o : integrate_euler.f90
