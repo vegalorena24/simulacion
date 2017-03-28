@@ -77,6 +77,7 @@ open(unit=124,file='restart.rst',status='unknown',action='write')
  !!! Post-Vis
 
 !accel = 10.0
+call forces(positions,BoxSize,ini,fin,accel)
 
 do step=1,Nsteps
 
