@@ -21,8 +21,8 @@ función.)
 Una vez hecho esto simplemente alla dónde tengáis todo lo que esta en esta carpeta ponéis en terminal "make" y listo, a disfrutar.
 Ejecutais ./mainMD.
 Os cuelgo también aquí para los más vagos el main_mserie que he empleado yo para ver que efectivamente tanto el make como el programa 
-de una pieza va. Lo tuyo xavi no estaba. Yo lo que hacia era mirar que el archivo de coord_serie.dat que imprime mi subrutina cuadraba,
-osea daba igual así como energy.dat.
+de una pieza va. Lo tuyo xavi no estaba, ni lo tuyo albert, life is hard. Yo lo que hacia era mirar que el archivo de coord_serie.dat que 
+imprime mi subrutina cuadraba,osea daba igual así como energy.dat.
 ---------------------------------------------------------------------------------------------------------------------
 -----------------------------ULTRA MODIFICACIÓN GUAY ( sugerencia Xavi ) --------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------
