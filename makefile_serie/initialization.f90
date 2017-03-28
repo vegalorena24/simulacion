@@ -8,7 +8,7 @@ implicit none
 double precision                                :: start_time, end_time
 double precision                                :: density
 integer                                         :: particles
-double precision, dimension (:,:)               :: positions, velocities
+double precision, dimension (particles,3)       :: positions, velocities
 double precision, dimension (:,:), allocatable  :: displacement
 double precision, dimension (3)                 :: Vcm=0.0
 double precision                                :: L, dr
