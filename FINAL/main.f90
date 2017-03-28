@@ -5,6 +5,7 @@ program m
 use paralelizar
 use s
 use forces_mod
+use integrators
 implicit none
 !*****************************************************
 
@@ -74,7 +75,14 @@ fin(numproc-1)=N
 
 !**************MAIN LOOP*********************************
 do i = 1, Nsteps
-    call forces(positions,BoxSize,ini,fin,accel) 
+    call forces(positions,BoxSize,ini,fin,accel)
+    call EulerPositions(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat,ini,fin)
+    call Refold_Positions(positions,N,dimnsion,BoxSize,ini,fin)
+    call EulerVelocities(velocities,accel,N,dimnsion,BoxSize,mass,deltat, ini, fin)
+
+    if ( rank == MASTER ) then
+        print *, 'r = ', positions(1,:)
+    endif
 enddo
 !********************************************************
 
