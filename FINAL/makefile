@@ -1,9 +1,11 @@
-MAIN : parametros.o main.o sotiris.o forces_mod.o integrators.o postvis.o
-	mpif90 -o MAIN parametros.o main.o sotiris.o forces_mod.o integrators.o postvis.o
+MAIN : parametros.o main.o sotiris.o forces_mod.o integrators.o integrator_verlet.o postvis.o
+	mpif90 -o MAIN parametros.o main.o sotiris.o forces_mod.o integrators.o integrator_verlet.o postvis.o
 forces_mod.o : forces_mod.f90 parametros.o
 	mpif90 -c forces_mod.f90
 integrators.o : integrators.f90 parametros.o
 	mpif90 -c integrators.f90
+integrator_verlet.o : integrator_verlet.f90 parametros.o
+	mpif90 -c integrator_verlet.f90
 sotiris.o : sotiris.f90 parametros.o
 	mpif90 -c sotiris.f90
 postvis.o : postvis.f90 parametros.o
