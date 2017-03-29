@@ -48,15 +48,15 @@ lin_dim=ceiling(particles**(1.0/3.0))
 dr=L/(lin_dim+1)
 
 
-if (rank==MASTER) then
-  print*
-  print*, "particles per processor:",partxproc
-  print*, "box length (L):",L
-  print*, "max particles in each dimension:",lin_dim
-  print*, "ininital inter-particle distance (dr):",dr
-  print*, "number of processors:",numproc
-  print*
-end if
+!if (rank==MASTER) then
+!  print*
+!  print*, "particles per processor:",partxproc
+!  print*, "box length (L):",L
+!  print*, "max particles in each dimension:",lin_dim
+!  print*, "ininital inter-particle distance (dr):",dr
+!  print*, "number of processors:",numproc
+!  print*
+!end if
 
 ! Defining dimensions
 allocate (v_cm(0:numproc-1,3))
