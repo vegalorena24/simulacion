@@ -6,4 +6,4 @@ Box_size             6.1984
 particle_mass        1.0
 rc                   2.5
 restart              50
-integrator           1            #0 Euler #1 Verlet
+integrator           1            ! #0 Euler #1 Verlet
