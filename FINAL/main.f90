@@ -47,6 +47,9 @@ open(100,file="input_data")
     read(100,*) parameter_name, rc
     read(100,*) parameter_name, Nrestart
     read(100,*) parameter_name, integrator 
+    read(100,*) parameter_name, randomize_initial_positions
+    read(100,*) parameter_name, random_initial_velocities
+    
 close(100)
  
  
@@ -63,7 +66,7 @@ allocate (velocities(N,dimnsion))
 
 
 !******************INICIALIZACION************************
-call initialize_system(N,density,positions,velocities)
+call initialize_system(N,density,positions,velocities,randomize_initial_positions,random_initial_velocities)
 !********************************************************
 
 
