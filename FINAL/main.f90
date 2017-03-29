@@ -21,6 +21,8 @@ integer:: N,dimnsion,Nsteps,i,j,step
 integer:: Nrestart,frame,integrator
 real(8) :: temperatura,presion
 real*8, dimension(:,:), allocatable  :: positions,accel,velocities
+logical                              :: randomize_initial_positions
+logical                              :: random_initial_velocities
 character(len=50)                    :: parameter_name
 !*****************************************************
 
