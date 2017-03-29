@@ -86,27 +86,40 @@ if (rank==MASTER) then
 end if
 !**************MAIN LOOP*********************************
 if (rank==MASTER) print*, "COMPUTING MAIN LOOP OF MOLECULAR DYNAMICS"
-do i = 1, Nsteps
+
+!Verlet integrator
   if (integrator==1) then
-    call IntegrationVerletPositions(positions,velocities,accel,deltat,N,mass,dimnsion,BoxSize,ini,fin)
-    call Refold_Positions(positions,N,dimnsion,BoxSize,ini,fin)
-    call IntegrationVerletVelocities(velocities,accel,deltat,N,mass,ini,fin)
     call forces(positions,BoxSize,ini,fin,accel)
-    call IntegrationVerletVelocities(velocities,accel,deltat,N,mass,ini,fin)
-  else if (integrator==0) then    
-    call forces(positions,BoxSize,ini,fin,accel)
-    call EulerPositions(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat,ini,fin)
-    call Refold_Positions(positions,N,dimnsion,BoxSize,ini,fin)
-    call EulerVelocities(velocities,accel,N,dimnsion,BoxSize,mass,deltat,ini, fin)
-  end if
-    if (rank==MASTER) then
-      if (mod(step,Nrestart)==0) then
-        do j=1,N
-          write(999,*), positions(i,:)
-        end do
+    do i = 1, Nsteps  
+      call IntegrationVerletPositions(positions,velocities,accel,deltat,N,mass,dimnsion,BoxSize,ini,fin)
+      call Refold_Positions(positions,N,dimnsion,BoxSize,ini,fin)
+      call IntegrationVerletVelocities(velocities,accel,deltat,N,mass,ini,fin)
+      call forces(positions,BoxSize,ini,fin,accel)
+      call IntegrationVerletVelocities(velocities,accel,deltat,N,mass,ini,fin)
+      if (rank==MASTER) then
+        if (mod(step,Nrestart)==0) then
+          do j=1,N
+            write(999,*), positions(i,:)
+          end do
+        end if
       end if
-    end if
-enddo
+    end do
+!Euler integrator
+  else if (integrator==0) then    
+    do i = 1, Nsteps
+      call forces(positions,BoxSize,ini,fin,accel)
+      call EulerPositions(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat,ini,fin)
+      call Refold_Positions(positions,N,dimnsion,BoxSize,ini,fin)
+      call EulerVelocities(velocities,accel,N,dimnsion,BoxSize,mass,deltat,ini, fin)
+      if (rank==MASTER) then
+        if (mod(step,Nrestart)==0) then
+          do j=1,N
+            write(999,*), positions(i,:)
+          end do
+        end if
+      end if
+    enddo
+  end if
 if (rank==MASTER) print*, "MAIN LOOP DONE"
 !********************************************************
 if (rank==MASTER) then
