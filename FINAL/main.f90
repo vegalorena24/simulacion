@@ -3,7 +3,7 @@ program m
 
 !**********************MODULOS************************
 use paralelizar
-use s
+use initialization
 use forces_mod
 use integrators
 use integrator_verlet
