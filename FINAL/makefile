@@ -12,5 +12,5 @@ postvis.o : postvis.f90 parametros.o
 	mpif90 -c postvis.f90
 parametros.o : parametros.f90
 	mpif90 -c parametros.f90
-main.o : main.f90 parametros.o sotiris.o forces_mod.o integrators.o
+main.o : main.f90 parametros.o sotiris.o forces_mod.o integrators.o integrator_verlet.o
 	mpif90 -c main.f90
