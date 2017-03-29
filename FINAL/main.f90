@@ -106,7 +106,7 @@ if (rank==MASTER) print*, "COMPUTING MAIN LOOP OF MOLECULAR DYNAMICS"
      temperatura = T_compute_paralel(N,velocities)
      presion = P_compute_paralel(N,BoxSize,positions,accel,temperatura)
       if (rank==MASTER) then
-        if (mod(step,Nrestart)==0) then
+        if (mod(i,Nrestart)==0) then
           do j=1,N
             write(999,*), positions(i,:)
           end do
@@ -123,7 +123,7 @@ if (rank==MASTER) print*, "COMPUTING MAIN LOOP OF MOLECULAR DYNAMICS"
      temperatura = T_compute_paralel(N,velocities)
      presion = P_compute_paralel(N,BoxSize,positions,accel,temperatura)
       if (rank==MASTER) then
-        if (mod(step,Nrestart)==0) then
+        if (mod(i,Nrestart)==0) then
           do j=1,N
             write(999,*), positions(i,:)
           end do
