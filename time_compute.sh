@@ -41,7 +41,7 @@
 #         este script funciona en el cluster                     #
 #                                                                #
 #################################################################
-
+#la comanda es....: module load openmpi/1.4.2_intel-11.1.072
 thisDir=$(pwd)
 maxProcesadors=$1
 maxParticles=$2
@@ -71,11 +71,7 @@ do
 
 		time_paralel=$( { /usr/bin/time -f "%e" mpirun -np $NProcesadors ./main $NParticles; } 2>&1)
 
-		#cd $thisDir/MD_serie
-
-		#time_series=$( { /usr/bin/time -f "%e"  ./main $NParticles; } 2>&1)
-
-		echo $NParticles'\t'$time_paralel #'\t'$time_series >&3
+		echo -e $NParticles' \t '$time_paralel >&3 #'\t'$time_series >&3
 	done 
 	exec 3<&- 
 done
@@ -89,7 +85,7 @@ do
 
 	time_series=$( { /usr/bin/time -f "%e"  ./main $NParticles; } 2>&1)
 
-	echo $NParticles'\t'$time_series #'\t'$time_series >&3
+	echo -e $NParticles' \t '$time_series #'\t'$time_series >&3
 done 
 
 	cd $thisDir
