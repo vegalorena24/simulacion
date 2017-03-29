@@ -8,6 +8,7 @@ use forces_mod
 use integrators
 use integrator_verlet
 use postvisualization  
+use analisis
 implicit none
 !*****************************************************
 
@@ -18,6 +19,7 @@ implicit none
 real*8 :: deltat, BoxSize, mass,rc,epot, ekin,partxproc, density
 integer:: N,dimnsion,Nsteps,i,j,step
 integer:: Nrestart,frame,integrator
+real(8) :: temperatura,presion
 real*8, dimension(:,:), allocatable  :: positions,accel,velocities
 character(len=50)                    :: parameter_name
 !*****************************************************
@@ -96,6 +98,8 @@ if (rank==MASTER) print*, "COMPUTING MAIN LOOP OF MOLECULAR DYNAMICS"
       call IntegrationVerletVelocities(velocities,accel,deltat,N,mass,ini,fin)
       call forces(positions,BoxSize,ini,fin,accel)
       call IntegrationVerletVelocities(velocities,accel,deltat,N,mass,ini,fin)
+     temperatura = T_compute_paralel(N,velocities)
+     presion = P_compute_paralel(N,BoxSize,positions,accel,temperatura)
       if (rank==MASTER) then
         if (mod(step,Nrestart)==0) then
           do j=1,N
@@ -111,6 +115,8 @@ if (rank==MASTER) print*, "COMPUTING MAIN LOOP OF MOLECULAR DYNAMICS"
       call EulerPositions(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat,ini,fin)
       call Refold_Positions(positions,N,dimnsion,BoxSize,ini,fin)
       call EulerVelocities(velocities,accel,N,dimnsion,BoxSize,mass,deltat,ini, fin)
+     temperatura = T_compute_paralel(N,velocities)
+     presion = P_compute_paralel(N,BoxSize,positions,accel,temperatura)
       if (rank==MASTER) then
         if (mod(step,Nrestart)==0) then
           do j=1,N
