@@ -6,6 +6,7 @@ use paralelizar
 use s
 use forces_mod
 use integrators
+use integrator_verlet
 use postvisualization  
 implicit none
 !*****************************************************
@@ -16,7 +17,7 @@ implicit none
 !Variables de MPI definidas en parametros.f90
 real*8 :: deltat, BoxSize, mass,rc,epot, ekin,partxproc, density
 integer:: N,dimnsion,Nsteps,i,j,step
-integer:: Nrestart,frame
+integer:: Nrestart,frame,integrator
 real*8, dimension(:,:), allocatable  :: positions,accel,velocities
 character(len=50)                    :: parameter_name
 !*****************************************************
@@ -43,7 +44,7 @@ open(100,file="input_data")
     read(100,*) parameter_name, mass
     read(100,*) parameter_name, rc
     read(100,*) parameter_name, Nrestart
- 
+    read(100,*) parameter_name, integrator 
 close(100)
  
  
@@ -86,10 +87,18 @@ end if
 !**************MAIN LOOP*********************************
 if (rank==MASTER) print*, "COMPUTING MAIN LOOP OF MOLECULAR DYNAMICS"
 do i = 1, Nsteps
+  if (integrator==1) then
+    call IntegrationVerletPositions(positions,velocities,accel,deltat,N,mass,dimnsion,BoxSize,ini,fin)
+    call Refold_Positions(positions,N,dimnsion,BoxSize,ini,fin)
+    call IntegrationVerletVelocities(velocities,accel,deltat,N,mass,ini,fin)
+    call forces(positions,BoxSize,ini,fin,accel)
+    call IntegrationVerletVelocities(velocities,accel,deltat,N,mass,ini,fin)
+  else if (integrator==0) then    
     call forces(positions,BoxSize,ini,fin,accel)
     call EulerPositions(positions,velocities,accel,N,dimnsion,BoxSize,mass,deltat,ini,fin)
     call Refold_Positions(positions,N,dimnsion,BoxSize,ini,fin)
     call EulerVelocities(velocities,accel,N,dimnsion,BoxSize,mass,deltat,ini, fin)
+  end if
     if (rank==MASTER) then
       if (mod(step,Nrestart)==0) then
         do j=1,N

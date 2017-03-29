@@ -1,8 +1,9 @@
 time_increment       0.001
-iterations           500
-number_of_particles  18
+iterations           1
+number_of_particles  100
 dimension            3
 Box_size             6.1984
 particle_mass        1.0
 rc                   2.5
 restart              50
+integrator           1            #0 Euler #1 Verlet

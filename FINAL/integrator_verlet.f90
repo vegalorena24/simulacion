@@ -2,7 +2,7 @@ Module integrator_verlet
 use paralelizar
 contains
 
-subroutine IntegrationVerletPositions(pos,vel,acc,deltat,npart,mass,dim,lenght)
+subroutine IntegrationVerletPositions(pos,vel,acc,deltat,npart,mass,dim,lenght,ini,fin)
 integer::npart,dim
 integer, dimension(0:), intent(in)::ini, fin
 real*8,dimension(npart,3),intent(inout)::pos
@@ -54,14 +54,11 @@ if (rank == MASTER) then
    print *,"Verlet positions Time : ",end_time-start_time," seconds"
 endif
 
-!Condiciones periódicas de contorno
-call Refold_Positions(pos,npart,dim,lenght)
-
 end subroutine IntegrationVerletPositions
 
 
 ! ======================================================================================
-subroutine IntegrationVerletVelocities(vel,acc,deltat,npart,mass)
+subroutine IntegrationVerletVelocities(vel,acc,deltat,npart,mass,ini,fin)
 
 integer::npart
 integer, dimension(0:), intent(in)::ini, fin
