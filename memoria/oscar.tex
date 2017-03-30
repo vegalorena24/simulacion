@@ -44,11 +44,11 @@ T = \frac{1}{3m} \left\langle \vec{v}^2 \right\rangle
 \subsection{Implementación:}
 Viendo las expresiones \ref{eq:presion} y \ref{eq:temp}, podemos ver que por cada magnitud hay que hacer la suma de $N$ productos escalares y luego sumarles i/o multiplicar unas constantes. Así que la implementación del cálculo de ambas magnitudes son muy parecidas.
 
-En términos de paralelización, lo que he hecho es hacer que cada procesador me coja el mismo número de partículas a excepción del último que me cogerá el resto que queden. Luego lo que hará cada procesador será la suma parcial de dichos productos escalares y luego con la subrutina \textsf{MPI\_REDUCE}.
+En términos de paralelización, lo que he hecho es hacer que cada procesador me coja el mismo número de partículas a excepción del último que me cogerá el resto que queden. Luego lo que hará cada procesador será la suma parcial de dichos productos escalares y luego con la subrutina \textsf{MPI\_REDUCE} las sumaré a un procesador común de manera jerárquica \ref{fig:reduce}.
 \begin{figure}[H]
 \includegraphics[scale=0.50]{reduce.png} 
 \caption{Esquema de cómo \textsf{MPI\_REDUCE} funciona.} 
-\label{fig:cerqt2_ana}
+\label{fig:reduce}
 \end{figure}
 El escalado del tiempo de cómputo con el número de partículas ha sido diferente en función de la máquina. En mi caso he usado mi portáti \ref{fig:workerii_ana} y el clúster cerqt2 \ref{fig:cerqt2_ana}.
 
