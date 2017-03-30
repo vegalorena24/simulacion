@@ -18,7 +18,6 @@ postvis.o : postvis.f90 parametros.o
 	
 parametros.o : parametros.f90
 	mpif90 -c parametros.f90
-	
 
 analisis_paralel.o : analisis_paralel.f90 parametros.o
 	mpif90 -c analisis_paralel.f90
@@ -32,6 +31,4 @@ clean:
 	@rm *.mod
 .PHONY : backup
 backup:
-	@tar cvzf simulacion_eia.tar.gz *
-
-
+	@tar cvzf simulacion_par.tar.gz *

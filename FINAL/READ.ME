@@ -1,0 +1,47 @@
+
+  #############################################################################
+  #                                                                           #
+  # ==========  READ.ME PROYECTO Eines Informàtiques Avançades =============  #
+  #                                                                           #
+  # Archivo con las instrucciones necesarias para poder realizar simulaciones #
+  # de Dinámica Molecular utilizando el código con implementación en entorno  #
+  # MPI.                                                                      #
+  #                                                                           #
+  #############################################################################
+
+
+  El archivo comprimido como simulacion_par.tar.gz incluye el código necesario
+  para poder realizar la simulación.
+
+  Una vez descomprimido, se encuentran los siguientes archivos en el directorio:
+
+      - Archivos .f90 con los códigos de las rutinas en módulos. Compuesto por:
+          + initialization: inicialización del sistema [Sotiris Samatas]
+          + integrators: integración de posición y velocidad por Euler [Sergi
+            Roca] y implementación de PBC [Lorena Vega]
+          + integrator_verlet: integración de posición y velocidad por Verlet
+            [Xavier Marugán]
+          + forces_mod: cálculo de las fuerzas I [Xabi M. Aretxabaleta]
+          + forces_mod_E: cálculo de las fuerzas II [Elena Sesé]
+          + analisis_paralel: cálculo de temperatura y presión [Oscar Fajardo]
+          + postvis: cálculo de desp. cuadrático medio [Alberto Pla]
+
+        Además, se incluye:
+          + main: código del main.
+          + parametros: módulo con las variables del entorno MPI.
+
+        El archivo input_data es necesario para realizar la simulación. Datos
+        de entrada:
+          + Incremento del tiempo.
+          + Iteraciones.
+          + Número de partículas.
+          + Tamaño de la caja.
+          + Masa de las partículas.
+          + Cut-off de las fuerzas.
+          + Frecuencia de escritura del archivo restart.rst
+          + Tipo de integrador usado: 0=Euler, 1=Verlet
+           
+      - makefile: archivo make. Posibles instrucciones:
+          + make --> Compilación del programa, generando el ejecutable MAIN.
+          + make clean --> Eliminación de archivos .p y .mod del directorio.
+          + make backup --> Compresión de los archivos en un archivo .tar.gz
