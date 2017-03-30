@@ -26,8 +26,12 @@ analisis_paralel.o : analisis_paralel.f90 parametros.o
 main.o : main.f90 parametros.o initialization.o forces_mod.o integrators.o integrator_verlet.o postvis.o analisis_paralel.o
 	mpif90 -c main.f90
 
-.PHOPNY: clean
+.PHONY: clean
 clean:
 	@rm *.o
 	@rm *.mod
+.PHONY : backup
+backup:
+	@tar cvzf simulacion_eia.tar.gz *
+
 
