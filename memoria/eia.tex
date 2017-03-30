@@ -34,30 +34,244 @@
 
 % --- Configurar la pagina ---------------------
 \pagestyle{fancy}
-\lhead{\bf EIA informe}
-\rhead{Team}
+\lhead{\bf Memoria EIA}
+\rhead{Máster en Modelización Atomística y Multiescala}
 %\lfoot{ }
-\rfoot{Barcelona, March 2017}
+\rfoot{Barcelona, Marzo 2017}
 % ----------------------------------------------
 
 
-\title{EIA : Plantilla sencilla y cutre tipo artículo, una columna. Acentos disponibles.}
-\author{Author: All of us}
-\date{Wednesday, 29th March}
+\title{Implementación de un código de Dinámica Molecular en serie y en paralelo usando el módulo MPI}
+\author{Oscar Fajardo, Xavier Marugán, Xabier Méndez, Alberto Pla,\\ Sergi Roca, Sotiris Samatas, Elena Sesé i Lorena Vega}
+\date{Jueves 30 de Marzo}
 
 \maketitle
-
-\section{Introduction}
-
 
 \section{Initialisation of the system}
 
 
-\section{Forces Elena}
+\section{Cálculo de Fuerzas: Lennard-Jones}
+Hemos implementado la interacción de Lennard-Jones para calcular las fuerzas entre pares de partículas.
+
+\begin{equation} \label{eq:1}
+ \vec{F}_{LJ} (r) = 24 \epsilon  \left(2 \frac{{\sigma}^{12}}{r^{13}} -  \frac{{\sigma}^{6}}{r^{7}}\right)\hat{r}
+\end{equation}
+
+donde $\epsilon = 1$ y $\sigma = 1$.
+
+
+El cómputo de las fuerzas en serie se reduce a calcular la distancia entre los pares de partículas, aplicando condiciones periódicas de contorno, y usar la Eq. (\ref{eq:1}) para obtener el valor de la fuerza que recibe cada partícula. 
+
+Para realizar el algoritmo en paralelo hemos divido las partículas por procesadores, lo que se conoce como \textit{Atom decomposition algorithm}. Es decir, hemos repartido un número igual de partículas para cada procesador, Fig \ref{interaction_mat1}. Cuando el número de partículas no sea divisible entre el número de procesadores, el último procesador se quedará con las partículas de más, hasta la última. 
+
+\begin{figure}[ht]
+\begin{equation*}
+G_{i,j}=\begin{pmatrix}
+\bullet  & \bullet & \bullet &\bullet  &\bullet  & \bullet & \bullet &\bullet \\ 
+ \bullet&\bullet  &  \bullet& \bullet & \bullet & \bullet & \bullet &\bullet \\
+ \bigtriangleup&\bigtriangleup  &  \bigtriangleup& \bigtriangleup & \bigtriangleup & \bigtriangleup & \bigtriangleup &\bigtriangleup \\
+ \bigtriangleup&\bigtriangleup  &  \bigtriangleup& \bigtriangleup & \bigtriangleup & \bigtriangleup & \bigtriangleup &\bigtriangleup \\
+ \diamond & \diamond  &  \diamond&  \diamond & \diamond &  \diamond &  \diamond & \diamond \\
+ \diamond & \diamond  &  \diamond&  \diamond & \diamond &  \diamond &  \diamond & \diamond \\
+ \star & \star  &  \star&  \star & \star &  \star &  \star & \star \\
+ \star & \star  &  \star&  \star & \star &  \star &  \star & \star
+ \end{pmatrix}
+\end{equation*}
+\caption{Separación de partículas por procesador. En este caso tenemos 8 partículas y 4 procesadores. Cada símbolo representa las interacciones que calculará cada procesador. }
+\label{interaction_mat1}
+\end{figure}
+
+\subsection{Método 1: \textit{Atom decomposition} algorithm}
+
+Trabajando con N partículas y 3 dimensiones, cada \textit{worker} calculará la interacción entre el número de partículas que se le han asignado y las N partículas del sistema. Ésta será la información que cada \textit{worker} le pase al procesador master, que finalmente obtendrá una matriz de fuerzas NxNx3, $\vec{G}_{ij}$. Esta matriz contiene la fuerza de cada partícula del sistema con todas las restantes. Una vez toda la información esté en el master, hay que sumar, en nuestro caso el segundo índice, para obtener la fuerza que cada partícula recibe por acción del resto, obteniendo así una matriz de fuerzas Nx3, $\vec{F}_{k}$. A continuación, se procederá a enviar esta matriz a todos los \textit{workers}. El proceso finaliza cuando todos los \textit{workers} reciben la matriz entera actualizada.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=0.6\textwidth, angle=-90]{time_particlesE.eps}
+\caption{Tiempo de cálculo de las fuerzas, de la comunicación entre procesadores y de la suma de interacciones en función de las partículas del sistema, fijando 8 procesadores, según el método 1.}
+\label{elena_1}
+\end{center}
+\end{figure}
+
+Esquemáticamente, el algoritmo utilizado es:
+
+\begin{enumerate}
+    \item Separación de partículas por procesadores.
+    
+    \item Envío de cada trozo de la matriz $\vec{G}_{ij}$ de los \textit{workers} al master.
+    \item El master recibe toda la matriz $\vec{G}_{ij}$.
+    \item El master calcula la fuerza total por partícula $\vec{F}_{k}$ (Eq. \ref{eq:1}).
+    \item Envío de la matriz $\vec{F}_{k}$ desde el master a todos los demás procesadores.
+    \item Todos los procesadores reciben la matriz $\vec{F}_{k}$ del master.
+\end{enumerate}
 
 
 
-\section{Forces Xabi}
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=0.6\textwidth, angle=-90]{time_procE.eps}
+\caption{Tiempo de cálculo de las fuerzas, de la comunicación entre procesadores y de la suma de interacciones en función del número de procesadores, fijando el número de partículas a 10000, según el método 1.}
+\label{elena_2}
+\end{center}
+\end{figure}
+
+Observando la Fig. \ref{elena_1} y como se esperaba, el tiempo de todos los procesos que hace el programa en paralelo aumenta con el número de partículas.
+
+El aumento de partículas se traduce en un aumento de pares entre los cuales calcular la fuerza de interacción. Por eso el cálculo de las fuerzas se ralentiza. Del mismo modo, la comunicación entre procesadores es más lenta porque las matrices $\vec{G}_{ij}$ que tienen que enviar y recibir son de mayor tamaño. 
+
+El proceso que menos afectado se ve por el aumento de partículas es la suma de la fuerza total por partícula. 
+
+En la Fig. \ref{elena_2} se ve la variación del tiempo de computación de los distintos procesos que realiza el programa en función del número de procesadores usados para computar en paralelo. 
+
+El tiempo de computación de las fuerzas es el proceso que lleva más tiempo.  Se observa también que repartir el cálculo entre más procesadores disminuye el tiempo de computación. Es más óptimo por tanto dividir el trabajo entre distintos procesadores, como cabía esperar.  
+
+El tiempo que lleva calcular la fuerza total por partícula se mantiene constante porque es un proceso que se hace en serie y, por tanto, únicamente depende del número de partículas, aquí fijo.
+
+La comunicación es más rápida cuando hay menos procesadores entre los que pasar información. No obstante, a partir de 6 procesadores aproximadamente, el tiempo de computación se mantiene constante. Podemos concluir que la comunicación entre procesadores se ve mucho más afectada por la cantidad de datos que se tengan que enviar y recibir que no por el número de procesadores que se usen.
+
+
+
+
+
+
+\subsection{Método 2: \textit{Atom decomposition} algorithm with \textit{Newton's second law}}
+
+
+
+Con el \textit{Atom decomposition algorithm} se puede aplicar la tercera ley de Newton, por la cual $\vec{G}_{ij}=-\vec{G}_{ji}$. y por lo tanto no hace falta calcular todos los pares de partículas sino solamente la mitad. 
+
+En un programa en serie esto es fácilmente implementable ya que solo se calcula la diagonal superior de la matriz de interacciones $\vec{F}_{ij}$. En el caso del programa en paralelo, al separar la matriz de interacciones por partículas, es decir, cada procesador solo calcula la interacción entre unas pocas partículas con todas las demás como se muestra en la Fig. \ref{interaction_mat2}, la forma de calcular la mitad de las interacciones tiene que hacerse de una forma un tanto diferente. Para que todos los procesadores tengan un numero igual o parecido de interacciones que calcular solo se calcularan los coeficientes de matriz en los que $i+j$ es par cuando $j>i$ y los coeficientes donde $i+j$ es impar cuando $j<i$.
+
+\begin{figure}[ht]
+\begin{equation*}
+  G_{ij} = \begin{pmatrix}
+\circ  & \circ & \bullet & \circ & \bullet\\ 
+\bullet & \circ & \circ &\bullet  & \circ\\ 
+\circ & \bullet & \circ & \circ &\bullet \\ 
+\bullet & \circ & \bullet &\circ  &\circ \\ 
+\circ &\bullet  & \circ &\bullet  & \circ
+\end{pmatrix}
+\end{equation*}
+\caption{Matriz de interacciones entre todas las partículas. Solo se calculan los coeficientes en los que $i+j$ es par cuando $j>i$ y los coeficientes donde $i+j$ es impar cuando $j<i$.}
+\label{interaction_mat2}
+\end{figure}
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=0.6\textwidth, angle=-90]{forces_proc1.eps}
+\caption{Cálculo de las fuerzas con el método 2. Número de partículas = 10000.}
+\label{xabi_1}
+\end{center}
+\end{figure}
+
+Por consiguiente, cada procesador calculará un número predeterminado de filas de la matriz de interacción $\vec{F}_{ij}$ de la Fig. \ref{interaction_mat2}. Una vez calculado, cada procesador mandará su trozo de la matriz al master y éste calculará la fuerza total que siente cada partícula de la siguiente manera:
+
+\begin{equation}
+    F_k = \sum_{j=1}^N G_{k,j} - \sum_{i=1}^N G_{i,k}
+\end{equation}
+\label{sum}
+
+dónde $F_k$ es la fuerza total que siente cada partícula.
+
+Por último, ahora que el master tiene la fuerza que siente cada partícula tiene que mandar esta matriz a todos los demás procesadores. Resumiendo, la paralelización se ha hecho de la siguiente manera:
+
+\begin{enumerate}
+    \item Separación de partículas por procesadores.
+    \item Cálculo de la mitad de términos de la matriz de interacciones $\vec{G}_{ij}$ como en la Fig. \ref{interaction_mat2}. Cada procesador calculara un número de filas.
+    \item Envío de cada trozo de la matriz $\vec{G}_{ij}$ al master.
+    \item El master recibe toda la matriz $\vec{G}_{ij}$.
+    \item El master calcula la fuerza total por partícula $\vec{F}_{k}$ (Eq. \ref{sum}).
+    \item Envio de la matriz $\vec{F}_{k}$ desde el master a todos los demás procesadores
+    \item Todos los procesadores reciben la matriz $\vec{F}_{k}$ del master.
+\end{enumerate}
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=0.6\textwidth, angle=-90]{forces_part1.eps}
+\caption{Cálculo de fuerzas con diferente número de partículas con el método 2. Número de procesadores = 8.}
+\label{xabi_3}
+\end{center}
+\end{figure}
+
+
+
+Como se puede observar en la Fig. \ref{xabi_1}, vemos que el proceso de calcular la fuerza total por partícula mediante la suma de la Eq. \ref{sum} (5º paso) es el proceso que más tiempo de computación lleva. Esto se debe a que este proceso solo lo hace el master y por lo tanto, se hace en serie. Por otro lado, vemos que el tiempo de comunicación se mantiene constante casi para cualquier número de procesadores y que el tiempo de cálculo de fuerzas decrece lentamente con muchos procesadores por lo que por mucho que añadamos muchos más procesadores que 24 no conseguiremos disminuir mucho el tiempo.
+
+En la linea verde de la Fig. \ref{xabi_2} podemos ver que el tiempo total utilizando este método decrece con el número de procesadores pero a partir de 15 se mantiene casi constante, es decir, 15 procesadores sería el número óptimo de procesadores para éste tipo de paralelización.
+
+
+Si se analiza el tiempo de computación respecto al número de partículas (Fig. \ref{xabi_3}) se puede observar que el tiempo de cálculo de fuerzas será más grande que el de comunicación entre procesadores para un número de partículas muy grande. Aún así, el tiempo de cálculo de la suma de fuerzas sigue siendo mucho más grande que los otros dos y és lo que hace que este método sea muy lento. Por esa razón, a continuación se propone otro método para reducir el tiempo de cálculo del proceso de la suma de la fuerza.
+
+\subsection{Método 3: Full parallelization of \textit{Atom decomposition} algorithm with \textit{Newton's second law}}
+Para este método de paralelización se han seguido los mismos pasos que en el método 2 hasta el 4º paso. Después, en este caso, una vez el master tiene la matriz de interacciones $\vec{G}_{ij}$ entera, la envía a todos los demás procesadores. Ahora, cada procesador calcula la fuerza total de las partículas que se le han asignado por lo que cada procesador tendrá un trozo de la matriz $\vec{F}_{k}$. Para juntar esta matriz, cada procesador tiene que enviarla el master y una vez que el master tenga la matriz entera volverla a enviar a todos los procesadores. En resumidas cuentas, el método quedaría de la siguiente manera:
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=0.6\textwidth, angle=-90]{forces_proc2.eps}
+\caption{Cálculo de fuerzas con diferente número de procesadores con el método 3. Número de partículas = 10000.}
+\label{xabi_5}
+\end{center}
+\end{figure}
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=0.6\textwidth, angle=-90]{forces_part2.eps}
+\caption{Cálculo de fuerzas con diferente número de partículas con el método 3. Número de procesadores = 8.}
+\label{xabi_4}
+\end{center}
+\end{figure}
+
+
+\begin{enumerate}
+    \item Separación de partículas por procesadores.
+    \item Cálculo de la mitad de términos de la matriz de interacciones $\vec{G}_{ij}$ como en la Fig. \ref{interaction_mat2}. Cada procesador calculara un número de filas.
+    \item Envio de cada trozo de la matriz $\vec{G}_{ij}$ al master.
+    \item El master recive toda la matriz $\vec{F}_{ij}$.
+    \item El master envía la matriz $\vec{G}_{ij}$ entera a todos los demás procesadores.
+    \item Todos los procesadores reciben la matriz $\vec{G}_{ij}$ del master.
+    \item Cada procesador calcula la fuerza total sobre las partículas que le hayan sido asignadas en el paso 1 calculando así un trozo de la matriz $\vec{F}_{k}$.
+    \item Envío de cada trozo de la matriz $\vec{F}_{k}$ al master.
+    \item El master recibe toda la matriz $\vec{F}_{k}$.
+    \item El master envía la matriz $\vec{F}_{k}$ entera a todos los demás procesadores.
+    \item Todos los procesadores reciben la matriz $\vec{F}_{k}$ del master.
+\end{enumerate}
+
+Como se puede observar en la Fig. \ref{xabi_5}, vemos que comparado con los 15 segundos que tardaba en el método 2 (Fig. \ref{xabi_1}, el proceso de sumar las fuerzas ha disminuido en tiempo considerablemente. Además, como la suma está paralelizada vemos que disminuye con el número de procesadores utilizados. Hay que destacar que este método es muy complejo a la hora de implementar la comunicación entre procesadores y es por eso que no se ha conseguido un código que funcione siempre. Por esa razón, solo se han podido utilizar un máximo de 8 procesadores.
+
+También podemos ver que el tiempo de comunicación es ligeramente mayor en el método 3 (Fig. \ref{xabi_5}) que en método 2 (Fig. \ref{xabi_1}) pero como el tiempo de suma es muchísimo más pequeño este método es mucho más rápido, como se puede observar en la linea azul de la Fig. \ref{xabi_2}.
+
+Analizando el tiempo de computación según el número de partículas se puede ver en la Fig. \ref{xabi_4} que el tiempo de suma ha decrecido considerablemente comparándolo con el de la Fig. \ref{xabi_3}. Cabe destacar que los cálculos a partir del número de partículas igual a 9000 no fueron realizados correctamente y por lo tanto esos puntos no se deben tomar en cuenta.
+
+Para terminar, en la Fig. \ref{xabielena} se puede observar que el método 3 es muchísimo mejor que el 2 y que para pocas partículas es tan eficiente como el código en serie aunque hay que resaltar que nunca mejora el tiempo del código en serio. 
+
+\subsection{Comparación de los métodos y conclusiones}
+
+En todos los métodos en paralelo, el tiempo de computación disminuye al aumentar los procesadores. Los métodos 2 y 3 siempre son más lentos que aplicar el algoritmo en serie. Esto se debe a que al realizar la suma de las fuerzas el tiempo computacional es mucho más alto que en el método 1, aunque podría ser un problema de diferentes implementaciones de la suma. La única diferencia está en el método 1. Si bien para pocos procesadores el algoritmo en serie sigue siendo más rápido, a partir de 7 procesadores esta tendencia se invierte, tal y como se ve en la Fig. \ref{xabi_2}.
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=0.6\textwidth, angle=-90]{forces_proc3.eps}
+\caption{Cálculo de fuerzas con diferentes procesadores y diferentes métodos de paralelización. Número de partículas = 10000.}
+\label{xabi_2}
+\end{center}
+\end{figure}
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=0.6\textwidth, angle=-90]{time_particlesEX.eps}
+\caption{Cálculo de fuerzas con distinto número de partículas y diferentes métodos de paralelización. Número de procesadores = 8. }
+\label{xabielena}
+\end{center}
+\end{figure}
+
+
+También se puede apreciar en la Fig. \ref{xabi_2} que el hecho de calcular las fuerzas en paralelo (método 3) disminuye mucho el tiempo de computación total comparando con el método 2. Aún así, nunca se llega a tiempos tan bajos como los del método 1. En un futuro se podría intentar paralelizar las fuerzas en el método 1 para así conseguir un código todavía más eficiente.
+
+En el caso de la Fig. \ref{xabielena}, el tiempo de computación aumenta con el número de partículas. Como el número de procesadores es 8, el método 1 es más rápido que el algoritmo en serie, independientemente del número de partículas.  Igual que en la Fig. \ref{xabi_2}, los métodos 2 y 3 son mucho más lentos. 
+
+En conclusión, a la hora de paralelizar el código para optimizar el tiempo podemos ver que el único método capaz de superar en velocidad al código en serie es el método 1 aunque puede que para sistemas con muchísimas más partículas el método 3 implementado de manera correcta consiga superar esta velocidad.
+
+Por último, destacar que hemos tenido muchos problemas con las funciones de MPI a la hora de tratar con matrices de tamaño muy grande. Sobretodo, estos problemas se acentúan cuando hay muchos envíos en un mismo código (como es el caso del método 3). Nos hemos dado cuenta de que no teníamos las herramientas de MPI necesarias para solucionar este tipo de problemas.
+
 
 
 \section{Integrador de Euler}
