@@ -49,35 +49,173 @@
 
 \section{Introduction}
 
-\lipsum
 
 \section{Initialisation of the system}
 
-\lipsum
 
 \section{Forces Elena}
 
-\lipsum
+
 
 \section{Forces Xabi}
 
-\lipsum
 
-\section{Euler Integrator}
+\section{Integrador de Euler}
 
-\lipsum
+Una de las principales partes de una código de dinámica molecular son los integradores de las ecuaciones de movimiento,
+aquellos que permiten la propia dinámica.
 
-\section{Verlet Integrator}
+Para hacer un buen código de dinámica molecular, es menester elegir correctamente qué integrador se va a usar en la simulación.
+En esta sección se va a explicar el algoritmo de Euler explícito, uno de los más sencillos que se pueden implementar.
 
-\lipsum
+El algoritmo de Euler discretiza e integra las ecuaciones de movimiento Newton, \eqref{eq:newton}, con tal de obtener la trayectoria de las partículas
+del sistema simulado.
 
-\section{PBC}
+\begin{equation}\label{eq:newton}
+\frac{\d\vec{r_k}}{\d t} = \vec{v_k}\hspace{2cm} \frac{\d\vec{p_k}}{\d t} = \vec{F_k} .
+\end{equation}
 
-\lipsum
+Dado que se trata de una dinámica molecular, el integrador implementará la actualización de las posiciones y la de las velocidades
+a cada paso de tiempo, siguiendo las ecuaciones \eqref{eq:r_euler} y \eqref{eq:v_euler},
+\begin{equation}\label{eq:r_euler} 
+\vec{r_k}(t+\Delta t) = \vec{r_k}(t) + \vec{v_k}(t) + \frac{1}{2m_k}\vec{F_k}(t)\Delta t^2 ,
+\end{equation}
+
+\begin{equation}\label{eq:v_euler} 
+\vec{v_k}(t+\Delta t) = \vec{v_k}(t) + \frac{1}{m_k}\vec{F_k}(t)\Delta t .
+\end{equation}
+
+No obstante, este integrador presenta un problema severo. Dicho problema es la falta de simetría bajo una transformación temporal inversa para $\Delta t$ 
+suficientemente grandes. Esto implica que si se quiere implementar un buen algoritmo integrador, habría que tomar pasos de tiempo infinitesimalmente pequeños
+al usar el integrador de Euler.
+
+La implementación numérica de este método en un código de DM es sencilla. En cada paso de tiempo, una vez las fuerzas que actúan sobre cada partícula hayan sido
+calculadas, se añade este algoritmo para calcular las nuevas posiciones y velocidades.
+
+\subsection{Código en paralelo}
+ 
+ El método usado para paralelizar las dos subrutinas que he implementado, los integradores para las posiciones y para las velocidades, ha sido la herramienta MPI para
+ Fortran90.
+ 
+ Con tal de paralelizar el cálculo del update de posiciones y velocidades, he elegido dividir los vectores según el índice correspondiente al número de partículas, i.e.,
+ que cada procesador ejecute el cálculo de un segmento de partículas, $[k , k + \delta k]$. El número de partículas que entre en cada procesador vendrá dado por el número
+ de procesadores y el número de partículas, e.g, en el caso de 12 partículas y 4 procesadores, cada uno ejecutará los cálculos para 3 partículas.
+ 
+ Una vez cada procesador ha calculado su correspondiente segmento del vector, lo envían al Master (procesador 0), el cual hace un \textit{merge} de todos los segmentos
+ con tal de obtener el vector entero de posiciones y velocidades ya actualizado a ese instante de tiempo. Cuando todo el vector está ya actualizado, el Master vuelve a mandar
+ el vector a todos los procesadores, consiguiendo así que todos ellos tengan toda la información actualizada.
+ 
+ Para enviar datos entre procesadores, he usado la subrutina del módulo `mpif.h' MPI$\_$ISEND. Una vez los datos han sido enviados, antes de ser recibidos, he implementado
+ una barrier, MPI$\_$BARRIER, con tal de esperar a que todos los procesadores hallan enviado su sección del vector y evitar fallos en la comunicación. Cuando la barrera ya ha sido
+ superada, los destinatarios reciben los datos con un MPI$\_$RECV, seguido también por una barrera que sólo sea superada una vez todos los destinatarios hayan recibido la información.
+ 
+ Para testear la paralelización, he estudiado la dependencia del tiempo de ejecución de mis subrutinas (posiciones y velocidades por Euler) en función del número de procesadores
+ y del número de partículas tratadas. Como se puede ver en los resultados mostrados en la \autoref{fig:posiciones_euler}, la paralelización no ha sido efectuada de modo eficiente,
+ pues cuantos más procesadores, más lenta es la ejecución. El mismo comportamiento ha sido observado para el caso del integrador de las velocidades.
+ 
+ \begin{figure}[h!]
+	\includegraphics[scale=0.5]{scalate_euler.pdf}
+	\caption{Dependencia del tiempo de ejecución del integrador Euler para las posiciones con el número de procesadores y partículas.}
+	\label{fig:posiciones_euler}
+\end{figure}
+
+	También se puede observar en la misma figura que el número de partículas tratadas tampoco influye significativamente en el tiempo de ejecución. Todo ello lleva a pensar que el método
+	usado no ha sido el óptimo, y que la paralelización efectuada no ha servido para acelerar el código. Un posible motivo es la simplicidad de las subrutinas, que sólo consistían en un
+	único bucle que recorría todo el vector de posiciones. Bucles de esta índole no son lentos, y escalan correctamente, mientras que el hecho de implementar la comunicación entre los procesadores
+	relentiza el código. Cuantos más procesadores, más comunicaciones habrá, y más aumenta el tiempo de ejecución, tal y como se muestra en la \autoref{fig:posiciones_euler}.
+
+\section{Integrador Velocity Verlet}
+
+El segundo integrador usado en el código es velocity Verlet y se aplica usando las siguientes expresiones dependiendo de la variable a integrar:
+
+\begin{equation}
+\vec{r}(t+\Delta t) = \vec{r}(t) + \vec{v}(t)\Delta t + \frac{\vec{F}(t)}{2m}\Delta t^2 ,
+\end{equation}
+
+\begin{equation}
+\vec{v}(t+\Delta t) = \vec{v}(t) + \left( \vec{F}(t)  + \vec{F}(t+\Delta t)\right) \frac{\Delta t}{2m} .
+\end{equation}
+
+ \begin{figure}[h!]
+	\includegraphics[scale=0.4]{posiciones_verlet.pdf}
+	\includegraphics[scale=0.4]{velocidades_verlet.pdf}
+	\caption{Dependencia del tiempo de ejecución del integrador Verlet para las posiciones y velocidades con el número de procesadores y partículas.}
+\end{figure}
+
+Para calcular las posiciones se usa exactamente la expresión de Velocity Verlet pero para las velocidades está estructurado en dos partes. Primero se calcula la velocidad en el paso de tiempo actual, luego se calculan las fuerzas para actualizar la aceleración de las partículas y finalmente, con la nueva aceleración, se calcula el término a tiempo posterior. El programa tiene esta estructura para no tener que guardar la aceleración en el tiempo anterior para cada partícula, lo que reduce la memoria que necesita el programa.
+
+Al realizar el cálculo en paralelo primero se realiza una parte del cálculo en cada uno de los procesadores a los que se ha enviado el cálculo. El reparto de los datos en cada procesador se realiza en el módulo paralelizar e importamos las variables a nuestro módulo.
+Luego enviamos la parte calculada de cada worker al master usando mpi$\_$isend e introducimos una barrier para asegurar-nos de que todos los workers han enviado su parte antes de seguir con el programa. Entonces usamos un mpi$\_$recv para que el master reciba todos los datos enviados.
+
+Finalmente, el master envía el vector de datos entero actualizado a todos los workers usando también un mpi$\_$isend, mpi$\_$barrier y mpi$\_$recv.
+
+Una vez comprobado que el programa funciona correctamente realizamos un estudio para comprobar como escala el tiempo de ejecución de las subrutinas respecto al número de procesadores para dos cantidades de partículas diferentes (100 y 10.000).
+
+Teóricamente esperaríamos el mismo comportamiento para las dos subrutinas, ya que solo difieren en el cálculo a realizar, pero no es exactamente lo que se observa. Para 100 partículas vemos en los dos casos que el tiempo de ejecución aumenta al aumentar el número de procesadores de una forma más o menos lineal, exceptuando uno de los puntos en cada caso. Para 10.000 partículas se observa un máximo de tiempo al usar 4 procesadores y luego en el caso de las velocidades el tiempo disminuye al aumentar los procesadores y para las posiciones primero disminuye y luego aumenta ligeramente.
+
+
+
+Esta diferencia entre las dos subrutinas puede ser debida a que algunos cálculos se han realizado en nodos diferentes, por lo que no se puede garantizar que el tiempo de cálculo sea el mismo para cada ejecución del programa. Para estudiar rigurosamente la escalabilidad del programa se requeriría de más tiempo y más control sobre los procesadores donde se ejecuta el programa.
+
+
+\section{Condiciones periódicas de contorno}
+
+Las condiciones periódicas de contorno nos aseguran que si la partícula se encuentra fuera de la caja nuestra subrutina encauza a ésta de manera que se halle en la posición de convención de imagen mínima. Esto implica que, si la partícula sale por un lado de la celda, entrará por el lado opuesto al de salida (\autoref{fig:min2d}). Estas son necesarias para simular sistemas grandes en un espacio más reducido de éste.
+
+Para aplicar esto, el código sitúa el origen de coordenadas en el centro de nuestra celda de simulación. Entonces, debemos restar una longitud proporcional al tamaño de la caja (L) a aquellas partículas que se encuentren más allá de L/2 en cualquiera de las tres direcciones, en caso de 3D (\autoref{fig:min3d}). De manera que, la constante de proporcionalidad venga dada por el número entero más cercano resultante de la división entre la posición de dicha partícula y L. En caso de que esta se encuentre en el interior de la celda esta constante valdrá 0 y la posición de la partícula no será variada. Para realizar este redondeo en Fortran90 se emplea la función nint, quedando el código como: 
+
+\begin{equation}
+\vec{r}(i,\text{dimensión}) = \vec{r}(i,\text{dimensión}) - L\cdot \text{nint}\left(\frac{\vec{r}(i,\text{dimensión})}{L}\right) ,
+\end{equation}
+dónde $i$ recorrería de uno a N (número total de partículas), y dimensión las diferentes coordenadas para el eje $x,y,z$.
+
+ \begin{figure}[h!]
+	\includegraphics[scale=0.29]{imagen_min.jpg}
+	\caption{Representación de la convención de imagen mínima para una lattice 2D.}
+	\label{fig:min2d}
+\end{figure}
+
+ \begin{figure}[h!]
+	\includegraphics[scale=0.32]{imagen_min_3d.jpg}
+	\caption{Celda de simulación 3D centrada en el origen de coordenadas.}
+	\label{fig:min3d}
+\end{figure}
+
+\subsection{Paralelización MPI}
+
+Para paralelizar la subrutina haremos la inicialización y finalización de MPI en el código principal incluyendo el módulo `mpif.h', y repartiremos el número de partículas según el número de procesadores que empleemos, con los vectores ini y fin. Haciendo que, si no hay un número entero de partículas, el último procesador haga una partícula de más. 
+Entonces en la subrutina, los diferentes workers con un MPI$\_$ISEND enviarán sus posiciones ya modificadas de las partículas que les pertenecen al master (procesador 0). El master con un MPI$\_$RECV recibirá toda la información actualizada y enviará toda esta con un MPI$\_$ISEND a todos los workers. Estos también la recibirán con MPI$\_$RECV, consiguiendo así que todos dispongan de las nuevas posiciones ya modificadas.
+
+Entre estos procesos de comunicación entre procesadores encontraremos llamadas a las subrutinas del módulo mpi que crean las barreras, MPI$\_$BARRIER. Estas obligan a esperar a tener toda la información de todos los workers o master antes del siguiente proceso de comunicación. 
+
+Para ver el efecto de la paralelización de dicha subrutina se ha graficado el tiempo que tarda esta con un número concreto de partículas (N=10000 y N=100) variando el número de procesadores empleados, obteniendo,
+
+
+ \begin{figure}[h!]
+	\includegraphics[scale=0.4]{lorena_proc.pdf}
+	\caption{Dependencia del tiempo de ejecución de las condiciones periódicas de contorno con el número de procesadores a un número de partículas constante.}
+\end{figure}
+
+
+Se puede observar que en este caso particular tarda más cuanto más procesadores haya. Esto es porque lo que ralentiza el proceso no es la línea de código de condiciones periódicas, si no el proceso de comunicación entre procesadores. Observaríamos, la ley de Amdahl’s pero a la inversa con N=10000. Este efecto se observa con mayor número de partículas. En este caso, no aumenta el tiempo linealmente con el número de procesadores porque siempre tenemos una parte serial de código. 
+
+También se ha estudiado como varia el tiempo de cálculo en función del número de partículas manteniendo un número de procesadores constante (procesadores=4). 
+
+ \begin{figure}[h!]
+	\includegraphics[scale=0.4]{lorena_particulas.pdf}
+	\caption{Dependencia del tiempo de ejecución de las condiciones periódicas de contorno con el número de partículas a un número de procesadores constante.}
+\end{figure}
+
+Como es lógico a mayor número de partículas se observa un mayor tiempo de cálculo. Y se observa una tendencia aceptablemente lineal.
+
+La determinación de puntos en ambas gráficas son resultado del promedio de diferentes medidas del tiempo ya que el clúster utilizado presenta distintos nodos, no pudiéndose controlar a cuál de ellos envía. De este modo, el resultado no es reproducible de una ejecución a otra.
+
+
+
 
 \section{Data}
 
-\lipsum
+
 
 \section{Desplazamiento cuadrático medio}
 
