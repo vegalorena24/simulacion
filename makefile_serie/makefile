@@ -16,3 +16,13 @@ mod_postvis_serie.o : mod_postvis_serie.f90
 	gfortran -c mod_postvis_serie.f90
 intento_main.o : intento_main.f90 f_xabi_2.o mod_postvis_serie.o analisis.o
 	gfortran -c intento_main.f90
+
+
+.PHONY: clean
+clean:
+	@rm *.o
+	@rm *.mod
+
+.PHONY : backup
+backup:
+	@tar cvzf simulacion_serie.tar.gz *
