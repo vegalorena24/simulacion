@@ -92,7 +92,7 @@ Para calcular dicha expresión, se introduce en el archivo de entrada un valor d
 
 Una vez finalizada la simulación, previamente a finalizar el entorno MPI, se llama a la subrutina \it{postvisual} con la entrada de número de frames, número de partículas y dimensión del sistema.
 
-La subrutina (en serie y en paralelo) lee el archivo generado a lo largo de la dinámica molecular en una matriz. Posteriormente, mide para cada partícula el MSD a cada frame impreso. Es decir, para una misma partícula conociendo el número de frames y partículas del sistema recorre la matriz calculando la expresión \ref{eq: expresion msd alberto}. Dichos valores se van imprimiendo en una nueva matriz con F filas (correspondientes una a cada tiempo) y C columnas (una por cada partícula).
+La subrutina (en serie y en paralelo) lee el archivo generado a lo largo de la dinámica molecular en una matriz. Posteriormente, mide para cada partícula el MSD a cada frame impreso. Es decir, para una misma partícula conociendo el número de frames y partículas del sistema recorre la matriz calculando la expresión \eqref{eq: expresion msd alberto}. Dichos valores se van imprimiendo en una nueva matriz con F filas (correspondientes una a cada tiempo) y C columnas (una por cada partícula).
 
 Finalmente, el resultado se imprime en un archivo con nombre \it{desplazamientos.dat}.
 
