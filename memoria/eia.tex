@@ -78,7 +78,7 @@ del sistema simulado.
 Dado que se trata de una dinámica molecular, el integrador implementará la actualización de las posiciones y la de las velocidades
 a cada paso de tiempo, siguiendo las ecuaciones \eqref{eq:r_euler} y \eqref{eq:v_euler},
 \begin{equation}\label{eq:r_euler} 
-\vec{r_k}(t+\Delta t) = \vec{r_k}(t) + \vec{v_k}(t) + \frac{1}{2m_k}\vec{F_k}(t)\Delta t^2 ,
+\vec{r_k}(t+\Delta t) = \vec{r_k}(t) + \vec{v_k}(t)\Delta t + \frac{1}{2m_k}\vec{F_k}(t)\Delta t^2 ,
 \end{equation}
 
 \begin{equation}\label{eq:v_euler} 
